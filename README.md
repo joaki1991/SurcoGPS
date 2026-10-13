@@ -1,6 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** 🟡 EN CURSO — ver tabla de sprints abajo.
+> **Estado global:** ✅ TERMINADO (12/12 PASS) — entrega v1.0.0 con APKs verificados.
+> Deuda explícita: prueba en hardware pendiente (sin dispositivo/VT-x en este equipo).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -49,7 +50,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 09 | Registro y coloreado de cobertura sobre el mapa | E | 03, 08 | ✅ PASS |
 | 10 | Parcelas/sesiones UI + reanudación | F | 05, 09 | ✅ PASS |
 | 11 | Foreground service + robustez (reinicios, batería, sin red) | G | 08, 10 | ✅ PASS |
-| 12 | QA final + APKs + revisión seguridad + docs instalación | H | 06–11 | ⏳ pendiente |
+| 12 | QA final + APKs + revisión seguridad + docs instalación | H | 06–11 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -124,4 +125,64 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
    o bloqueo externo documentado con evidencia.
 
 ## 11. Registro de publicación
-(Por sprint: commit, push y verificación — se rellena al cerrar cada sprint.)
+| Sprint | Commit | Push a `origin/main` |
+|---|---|---|
+| 01 | `0d3363a` | OK |
+| 02 | `6f5893d` | OK |
+| 03 | `25b917e` | OK |
+| 04 | `547dfde` | OK |
+| 05 | `bda4ef8` | OK |
+| 06 | `afe67ae` | OK |
+| 07 | `e10f583` | OK |
+| 08 | `597899d` | OK |
+| 09 | `7ae4bc8` | OK |
+| 10 | `45abf98` | OK |
+| 11 | `c02f944` | OK |
+| 12 | (este commit) | (con este push) |
+
+## 12. Instalación y uso (v1.0.0)
+
+### Artefactos
+- Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
+- Lanzamiento: `app/build/outputs/apk/release/app-release.apk` (8,3 MB, firmada con clave
+  local de desarrollo `CN=SurcoGPS-Dev`, SHA-256 `39:46:59:9E:F0:F4:2B:DE:96:DD:BC:38:2F:83:A3:8B:D2:7B:52:3F:35:E9:50:70:8B:2E:7A:63:F7:3C:C4:01`).
+- Requisito: Android 8.0 (API 26) o superior. Package: `es.surcogps.app`.
+
+### Instalar en otro dispositivo
+1. Copia el APK al móvil (USB, correo o descarga).
+2. En el móvil: permite «instalar aplicaciones desconocidas» para la app usada
+   (Ajustes → Seguridad) o confirma con `adb install app-release.apk`.
+3. Abre **SurcoGPS**, pulsa **Permitir ubicación** y concede «Mientras se usa la app».
+4. Sin conexión funciona lo ya visitado (caché de teselas); con red se descargan
+   Mapnik (© OpenStreetMap contributors) y Esri World Imagery.
+
+### Flujo de trabajo en campo
+1. **Campo**: elige modo de mapa (Híbrido/Satélite/Calles), ajusta rumbo (0°=N,
+   90°=E, 180°=S, 270°=O) y ancho del apero.
+2. Pulsa **Fijar ancla aquí** (o se fija sola en la primera posición válida).
+3. **Sesión → Nueva sesión**; trabaja: la franja del apero se colorea en verde y
+   el HUD muestra precisión (±m, siempre visible), velocidad, línea, XTE (→/←/✓)
+   y hectáreas sin duplicar.
+4. **Pausar/Registrar** para cabeceras; **Terminar** al acabar.
+5. **Parcela → Guardar parcela actual** para reutilizar ancla+rumbo+ancho.
+6. Con pantalla apagada el tracking sigue (notificación persistente con Detener).
+
+### Reconstruir y firmar
+```powershell
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+.\gradlew.bat :core:test                 # 70 tests
+.\gradlew.bat :app:testDebugUnitTest     # 20 tests
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:assembleRelease       # requiere clave en local.properties (ver abajo)
+```
+Firma release: genera tu keystore (`keytool -genkeypair ...`) y añade a
+`local.properties` (NO commitear): `surco.storeFile`, `surco.storePassword`,
+`surco.keyAlias`, `surco.keyPassword`. Sin estas propiedades el release sale sin
+firmar. Para Google Play genera una clave dedicada y custódiala fuera del repo.
+
+### Verificación tras un cambio de hardware (pendiente)
+Con un dispositivo a mano: instala, concede permiso, fija ancla, camina 100 m en
+línea recta con ancho 6 m (≈600–780 m² por sesgo documentado del raster),
+comprueba que quieto no colorea, mata la app y reanuda (misma área), y deja la
+pantalla apagada 5 min (sin huecos). Registrar resultados en
+`.sdd/test-reports/`.

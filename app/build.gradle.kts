@@ -4,6 +4,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+import java.util.Properties
+
 android {
     namespace = "es.surcogps.app"
     compileSdk = 34
@@ -16,9 +18,28 @@ android {
         versionName = "1.0.0"
     }
 
+    // Firma release con clave LOCAL (local.properties, nunca commiteada).
+    // Sin propiedades → APK sin firmar (solo diagnóstico).
+    val firmaProps = Properties().apply {
+        rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use(::load)
+    }
+    val tieneFirma = listOf("surco.storeFile", "surco.storePassword", "surco.keyAlias", "surco.keyPassword")
+        .all { firmaProps.containsKey(it) }
+    signingConfigs {
+        if (tieneFirma) {
+            create("release") {
+                storeFile = file(firmaProps["surco.storeFile"] as String)
+                storePassword = firmaProps["surco.storePassword"] as String
+                keyAlias = firmaProps["surco.keyAlias"] as String
+                keyPassword = firmaProps["surco.keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (tieneFirma) signingConfig = signingConfigs.getByName("release")
         }
     }
 

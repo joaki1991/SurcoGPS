@@ -81,3 +81,12 @@
   notificación ha/XTE/Detener) + `ArranqueReceiver` + flags persistidos.
   ViewModel adelgazado a fachada (pantallas intactas). App 20/20, core 70/70, APK.
 - Siguiente: SPRINT-12 (QA final + APKs + entrega).
+
+## 2026-10-13 — SPRINT-12 PASS · PROYECTO TERMINADO (v1.0.0)
+- Suites: core 70/70, app 20/20. `assembleDebug` + `assembleRelease` (lint vital OK).
+- APKs: debug 11 648 261 B + release 8 266 192 B, package `es.surcogps.app`,
+  min 26/target 34, firmas verificadas (`CN=SurcoGPS-Dev`, huella documentada).
+- Seguridad PASS (sin secretos/TODOs, permisos mínimos, sin telemetría).
+- README con instalación, uso, firma y verificación en hardware pendiente.
+- Deuda única: prueba en dispositivo (sin hardware ni VT-x aquí).
+- Historial: 12 commits (1 por sprint), pushes OK. Cierre con commit + push final.
