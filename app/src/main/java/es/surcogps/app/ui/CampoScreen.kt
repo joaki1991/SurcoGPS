@@ -18,17 +18,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import es.surcogps.app.mapa.MapaCampo
 
-/** Pantalla de campo: resumen de guía + estado. El mapa se integra en el SPRINT-07. */
+/** Pantalla de campo: mapa híbrido + resumen de guía. El GPS en vivo llega en el SPRINT-08. */
 @Composable
 fun CampoScreen(vm: CampoViewModel) {
     val a by vm.ajustes.collectAsState()
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Campo", style = MaterialTheme.typography.headlineSmall)
-        Text("Rumbo: ${"%.0f".format(a.rumboDeg)}°  ·  Ancho: ${"%.1f".format(a.anchoAperoM)} m")
-        Text("Shift lateral: ${"%.1f".format(a.desplazamientoLateralM)} m")
-        Text("Puerta de precisión: ${"%.0f".format(a.puertaPrecisionM)} m (GPS de móvil: precisión métrica, no centimétrica)")
-        Text("Mapa híbrido: se integra en el Sprint 07. Cobertura GPS: Sprint 08.")
+    val modo by vm.modoMapa.collectAsState()
+    Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        MapaCampo(
+            modo = modo,
+            alCambiarModo = vm::cambiarModoMapa,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        )
+        Text("Rumbo: ${"%.0f".format(a.rumboDeg)}°  ·  Ancho: ${"%.1f".format(a.anchoAperoM)} m  ·  Puerta: ${"%.0f".format(a.puertaPrecisionM)} m")
         Spacer(Modifier.height(8.dp))
         Text("Ajuste rápido de rumbo")
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

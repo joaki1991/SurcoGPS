@@ -44,7 +44,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 04 | GPS: GpsFilter + ImplementOffset | D/E | 02 | ✅ PASS |
 | 05 | Persistencia: SessionStore JSON/JVM + contrato Room | F | 03, 04 | ✅ PASS |
 | 06 | App base: módulo `:app`, Compose, navegación, permisos, ajustes | A | 01 | ✅ PASS |
-| 07 | Mapa híbrido OSMDroid + atribución + offline | B | 06 | ⏳ pendiente |
+| 07 | Mapa híbrido OSMDroid + atribución + offline | B | 06 | ✅ PASS |
 | 08 | GPS real + banderillero (velocidad, precisión, XTE) | D | 04, 07 | ⏳ pendiente |
 | 09 | Registro y coloreado de cobertura sobre el mapa | E | 03, 08 | ⏳ pendiente |
 | 10 | Parcelas/sesiones UI + reanudación | F | 05, 09 | ⏳ pendiente |

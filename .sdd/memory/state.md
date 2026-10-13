@@ -50,3 +50,10 @@
 - `:app` compilable: `assembleDebug` OK, APK 10.3 MB, badging `es.surcogps.app`,
   4 pantallas + DataStore. `:core:test` 60/60 sin regresión.
 - Siguiente: SPRINT-07 (mapa híbrido OSMDroid).
+
+## 2026-10-13 — SPRINT-07 PASS
+- Mapa híbrido (Esri + referencia) / satélite / calles, atribución visible, aviso
+  offline. Tests JVM 4/4 (URLs z/y/x verificadas); assembleDebug OK (13 MB).
+- Deuda: verificación visual en pantalla pendiente de dispositivo (sin VT-x para
+  emulador, `adb devices` vacío). Anotado para Sprint 12.
+- Siguiente: SPRINT-08 (GPS real + banderillero).
