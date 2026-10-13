@@ -43,7 +43,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 03 | Cobertura: CoverageTracker raster 1 m, área sin duplicar | E | 02 | ✅ PASS |
 | 04 | GPS: GpsFilter + ImplementOffset | D/E | 02 | ✅ PASS |
 | 05 | Persistencia: SessionStore JSON/JVM + contrato Room | F | 03, 04 | ✅ PASS |
-| 06 | App base: módulo `:app`, Compose, navegación, permisos, ajustes | A | 01 | ⏳ pendiente |
+| 06 | App base: módulo `:app`, Compose, navegación, permisos, ajustes | A | 01 | ✅ PASS |
 | 07 | Mapa híbrido OSMDroid + atribución + offline | B | 06 | ⏳ pendiente |
 | 08 | GPS real + banderillero (velocidad, precisión, XTE) | D | 04, 07 | ⏳ pendiente |
 | 09 | Registro y coloreado de cobertura sobre el mapa | E | 03, 08 | ⏳ pendiente |

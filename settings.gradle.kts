@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SurcoGPS"
 include(":core")
+include(":app")

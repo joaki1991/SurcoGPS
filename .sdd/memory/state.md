@@ -43,3 +43,10 @@
   celdas compactadas por filas. Suite 60/60 verde a la primera. Informes SPRINT-05.
 - Núcleo `:core` COMPLETO (sprints 01–05). Siguiente: instalar Android SDK
   (cmdline-tools + plataforma 34) y SPRINT-06 (módulo `:app`).
+
+## 2026-10-13 — SDK instalado + SPRINT-06 PASS
+- SDK en `%LOCALAPPDATA%\Android\Sdk` (cmdline-tools vía BITS, build-tools 34.0.0,
+  android-34, platform-tools 37.0.1, licencia aceptada).
+- `:app` compilable: `assembleDebug` OK, APK 10.3 MB, badging `es.surcogps.app`,
+  4 pantallas + DataStore. `:core:test` 60/60 sin regresión.
+- Siguiente: SPRINT-07 (mapa híbrido OSMDroid).
