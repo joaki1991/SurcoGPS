@@ -31,3 +31,9 @@
   Suite 34/34 verde; 4 expectativas iniciales recalibradas con valores medidos y
   sobrestimación documentada. Informes SPRINT-03 en `.sdd/`.
 - Siguiente: SPRINT-04 (GpsFilter + ImplementOffset).
+
+## 2026-10-13 — SPRINT-04 PASS
+- `GpsFilter` (caducidad→precisión→salto, puertas configurables) + `ImplementOffset`
+  (lateral/longitudinal rotados por rumbo). Suite 52/52 verde (1 empate de media
+  calle en test, corregido). Informes SPRINT-04 en `.sdd/`.
+- Siguiente: SPRINT-05 (SessionStore persistencia JVM/JSON).
