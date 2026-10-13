@@ -1,0 +1,18 @@
+# Gradle
+.gradle/
+build/
+*/build/
+local.properties
+
+# Android / firma — NUNCA commitear claves
+*.jks
+*.keystore
+*.p12
+*.pem
+google-services.json
+
+# IDE / SO
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
