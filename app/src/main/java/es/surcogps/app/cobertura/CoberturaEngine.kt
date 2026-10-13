@@ -64,6 +64,30 @@ class CoberturaEngine(
         ultimo = null
     }
 
+    /** Foto de celdas para persistir. */
+    fun snapshotCells(): Set<Long> = tracker.snapshot()
+
+    /** Recorrido del apero reconstruido desde los tramos (para persistir). */
+    fun snapshotTrack(): List<LatLon> = buildList {
+        if (_tramos.isEmpty()) return@buildList
+        add(_tramos[0].desde)
+        _tramos.forEach { add(it.hasta) }
+    }
+
+    /**
+     * Restaura una sesión guardada: cuadrícula intacta y tramos redibujados
+     * desde el track (capados a [MAX_TRAMOS_DIBUJO]).
+     */
+    fun restaurar(cells: Set<Long>, track: List<LatLon>, ancho: Double) {
+        tracker.restore(cells)
+        _tramos.clear()
+        for (i in 1 until track.size) {
+            if (_tramos.size >= MAX_TRAMOS_DIBUJO) break
+            _tramos.add(TramoFranja(track[i - 1], track[i], ancho))
+        }
+        ultimo = track.lastOrNull()
+    }
+
     companion object {
         const val MAX_TRAMOS_DIBUJO = 20_000
         /** Desplazamiento mínimo para registrar (m). */

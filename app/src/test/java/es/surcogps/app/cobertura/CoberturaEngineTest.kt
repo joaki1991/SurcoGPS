@@ -81,4 +81,21 @@ class CoberturaEngineTest {
         e.registrar(punto(0.0, 100.0))
         assertEquals(e.areaM2 / 10_000.0, e.areaHa, 1e-12)
     }
+
+    @Test
+    fun snapshotRestoreParaReanudar() {
+        val e = CoberturaEngine(ancla, 6.0)
+        for (d in 0..50 step 10) e.registrar(punto(0.0, d.toDouble()))
+        val cells = e.snapshotCells()
+        val track = e.snapshotTrack()
+        assertEquals(6, track.size) // 6 puntos → 5 tramos.
+        val e2 = CoberturaEngine(ancla, 6.0)
+        e2.restaurar(cells, track, 6.0)
+        assertEquals(e.areaM2, e2.areaM2, 1e-9)
+        assertEquals(5, e2.tramos.size)
+        // Y sigue sumando tras reanudar.
+        e2.registrar(punto(6.0, 50.0))
+        e2.registrar(punto(6.0, 100.0))
+        assertTrue(e2.areaM2 > e.areaM2)
+    }
 }

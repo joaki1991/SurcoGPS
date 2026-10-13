@@ -97,23 +97,12 @@ class FileSessionStore(private val dir: File) : SessionStore {
         num("shiftM", s.lateralShiftM); append(',')
         num("offsetLat", s.offset.lateralM); append(',')
         num("offsetLon", s.offset.longitudinalM); append(',')
-        append("\"track\":[")
-        s.track.forEachIndexed { i, p ->
-            if (i > 0) append(',')
-            append('[').append(p.lat).append(',').append(p.lon).append(']')
-        }
-        append("],")
-        append("\"cells\":{")
-        compactRows(s.cells).entries.sortedBy { it.key }.forEachIndexed { i, (iy, ranges) ->
-            if (i > 0) append(',')
-            append('"').append(iy).append("\":[")
-            ranges.forEachIndexed { j, r ->
-                if (j > 0) append(',')
-                append('[').append(r.first).append(',').append(r.second).append(']')
-            }
-            append(']')
-        }
-        append("},")
+        append("\"track\":")
+        append(SessionJson.encodeTrack(s.track))
+        append(",")
+        append("\"cells\":")
+        append(SessionJson.encodeCells(s.cells))
+        append(",")
         num("startedMs", s.startedMs.toDouble()); append(',')
         num("updatedMs", s.updatedMs.toDouble()); append(',')
         append("\"finished\":").append(if (s.finished) "true" else "false")
@@ -140,31 +129,8 @@ class FileSessionStore(private val dir: File) : SessionStore {
     }
 
     /** Agrupa celdas por fila iy en rangos contiguos de ix. */
-    internal fun compactRows(cells: Set<Long>): Map<Int, List<Pair<Int, Int>>> {
-        val byRow = mutableMapOf<Int, MutableList<Int>>()
-        for (key in cells) {
-            val ix = (key shr 32).toInt()
-            val iy = (key and 0xFFFFFFFFL).toInt()
-            byRow.getOrPut(iy) { mutableListOf() }.add(ix)
-        }
-        return byRow.mapValues { (_, xs) ->
-            val sorted = xs.sorted()
-            val ranges = mutableListOf<Pair<Int, Int>>()
-            var start = sorted[0]
-            var prev = sorted[0]
-            for (i in 1 until sorted.size) {
-                if (sorted[i] == prev + 1) {
-                    prev = sorted[i]
-                } else {
-                    ranges.add(start to prev)
-                    start = sorted[i]
-                    prev = sorted[i]
-                }
-            }
-            ranges.add(start to prev)
-            ranges
-        }
-    }
+    internal fun compactRows(cells: Set<Long>): Map<Int, List<Pair<Int, Int>>> =
+        CellCodec.compact(cells)
 
     // ---- JSON mínimo (lectura del esquema propio) ----
 
@@ -172,25 +138,11 @@ class FileSessionStore(private val dir: File) : SessionStore {
         val root = MiniJson.parseObject(json)
         fun dbl(k: String): Double = (root[k] as Number).toDouble()
         @Suppress("UNCHECKED_CAST")
-        val track = (root["track"] as List<Any?>).map {
-            val p = it as List<Any?>
-            LatLon((p[0] as Number).toDouble(), (p[1] as Number).toDouble())
-        }
+        val trackRaw = root["track"] as List<Any?>
         @Suppress("UNCHECKED_CAST")
         val cellsRaw = root["cells"] as Map<String, Any?>
-        val cells = mutableSetOf<Long>()
-        for ((iyStr, rangesAny) in cellsRaw) {
-            val iy = iyStr.toInt()
-            @Suppress("UNCHECKED_CAST")
-            val ranges = rangesAny as List<Any?>
-            for (r in ranges) {
-                @Suppress("UNCHECKED_CAST")
-                val pair = r as List<Any?>
-                val x0 = (pair[0] as Number).toInt()
-                val x1 = (pair[1] as Number).toInt()
-                for (ix in x0..x1) cells.add((ix.toLong() shl 32) xor (iy.toLong() and 0xFFFFFFFFL))
-            }
-        }
+        val track = SessionJson.decodeTrackList(trackRaw)
+        val cells = SessionJson.decodeCellsMap(cellsRaw)
         return WorkSession(
             id = root["id"] as String,
             name = root["name"] as String,
@@ -209,7 +161,7 @@ class FileSessionStore(private val dir: File) : SessionStore {
 }
 
 /** Analizador JSON mínimo, suficiente para el esquema de [FileSessionStore]. */
-internal object MiniJson {
+object MiniJson {
     fun parseObject(s: String): Map<String, Any?> {
         val p = Parser(s)
         p.ws()
@@ -327,5 +279,112 @@ internal object MiniJson {
             while (!eof() && s[i] in "-+0123456789.eE") i++
             return s.substring(start, i).toDouble()
         }
+    }
+}
+
+/** Compactación de celdas raster por filas (compartida fichero/Room). */
+object CellCodec {
+
+    /** Agrupa celdas por fila iy en rangos contiguos de ix. Vacío → mapa vacío. */
+    fun compact(cells: Set<Long>): Map<Int, List<Pair<Int, Int>>> {
+        val byRow = mutableMapOf<Int, MutableList<Int>>()
+        for (key in cells) {
+            val ix = (key shr 32).toInt()
+            val iy = (key and 0xFFFFFFFFL).toInt()
+            byRow.getOrPut(iy) { mutableListOf() }.add(ix)
+        }
+        return byRow.mapValues { (_, xs) ->
+            val sorted = xs.sorted()
+            val ranges = mutableListOf<Pair<Int, Int>>()
+            var start = sorted[0]
+            var prev = sorted[0]
+            for (i in 1 until sorted.size) {
+                if (sorted[i] == prev + 1) {
+                    prev = sorted[i]
+                } else {
+                    ranges.add(start to prev)
+                    start = sorted[i]
+                    prev = sorted[i]
+                }
+            }
+            ranges.add(start to prev)
+            ranges
+        }
+    }
+
+    /** Inversa de [compact]. */
+    fun expand(rows: Map<Int, List<Pair<Int, Int>>>): Set<Long> {
+        val cells = mutableSetOf<Long>()
+        for ((iy, ranges) in rows) {
+            for ((x0, x1) in ranges) {
+                for (ix in x0..x1) {
+                    cells.add((ix.toLong() shl 32) xor (iy.toLong() and 0xFFFFFFFFL))
+                }
+            }
+        }
+        return cells
+    }
+}
+
+/**
+ * Códec JSON público para track y celdas (mismo esquema en fichero JVM y Room).
+ * Sin dependencias externas.
+ */
+object SessionJson {
+
+    fun encodeCells(cells: Set<Long>): String = buildString {
+        append('{')
+        CellCodec.compact(cells).entries.sortedBy { it.key }.forEachIndexed { i, (iy, ranges) ->
+            if (i > 0) append(',')
+            append('"').append(iy).append("\":[")
+            ranges.forEachIndexed { j, r ->
+                if (j > 0) append(',')
+                append('[').append(r.first).append(',').append(r.second).append(']')
+            }
+            append(']')
+        }
+        append('}')
+    }
+
+    fun decodeCells(json: String): Set<Long> {
+        @Suppress("UNCHECKED_CAST")
+        val raw = MiniJson.parseObject(json) as Map<String, Any?>
+        return decodeCellsMap(raw)
+    }
+
+    internal fun decodeCellsMap(raw: Map<String, Any?>): Set<Long> {
+        val rows = mutableMapOf<Int, List<Pair<Int, Int>>>()
+        for ((iyStr, rangesAny) in raw) {
+            val iy = iyStr.toInt()
+            @Suppress("UNCHECKED_CAST")
+            val ranges = rangesAny as List<Any?>
+            rows[iy] = ranges.map {
+                @Suppress("UNCHECKED_CAST")
+                val pair = it as List<Any?>
+                (pair[0] as Number).toInt() to (pair[1] as Number).toInt()
+            }
+        }
+        return CellCodec.expand(rows)
+    }
+
+    fun encodeTrack(track: List<LatLon>): String = buildString {
+        append('[')
+        track.forEachIndexed { i, p ->
+            if (i > 0) append(',')
+            append('[').append(p.lat).append(',').append(p.lon).append(']')
+        }
+        append(']')
+    }
+
+    fun decodeTrack(json: String): List<LatLon> {
+        val parsed = MiniJson.parseObject("{\"t\":$json}")["t"]
+        @Suppress("UNCHECKED_CAST")
+        return decodeTrackList(parsed as List<Any?>)
+    }
+
+    internal fun decodeTrackList(raw: List<Any?>): List<LatLon> = raw.map {
+        @Suppress("UNCHECKED_CAST")
+        val p = it as List<Any?>
+        LatLon((p[0] as Number).toDouble(), (p[1] as Number).toDouble())
     }
 }

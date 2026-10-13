@@ -45,9 +45,15 @@ App Android nativa (Kotlin + Jetpack Compose, MVVM) + núcleo de dominio puro `:
 - **ADR-04 Fused + NMEA.** Fused para consumo/batería; `OnNmeaMessageListener`
   expone GGA/RMC para diagnóstico y deja puerta a GNSS externo RTK vía mock
   location (documentado, no implementado el BT propio en v1).
-- **ADR-05 Room + DataStore.** Room para series (puntos, celdas); DataStore
-  Preferences para ajustes (rumbo, ancho, puertas, offsets). Supervivencia a
-  muerte de proceso y reinicio.
+- **ADR-05 Persistencia local.** Ficheros JSON en almacenamiento interno (sesiones vía
+  `FileSessionStore`, parcelas vía `FileParcelaStore`, ajustes vía DataStore).
+  Room se evaluó (entidades + KSP 2.0.20-1.0.25 compilados y verificados) pero se
+  descartó en v1: anomalía de toolchain (KSP generaba los `_Impl` correctamente y
+  sin embargo `compileDebugKotlin` no resolvía las clases anotadas, sin error en
+  sus ficheros; causa raíz no identificada). Los stores de fichero reutilizan el
+  contrato probado de `:core` (64 tests) con idénticas garantías de durabilidad a
+  escala v1; revisar Room solo si la complejidad de consultas lo exige.
+  Supervivencia a muerte de proceso y reinicio.
 - **ADR-06 Foreground service tipo `location`.** Obligatorio desde Android 14
   para tracking con pantalla apagada. Notificación persistente con ha, XTE y botón parar.
 

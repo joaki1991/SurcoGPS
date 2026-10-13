@@ -131,8 +131,7 @@ class SessionStoreTest {
     }
 
     @Test
-    fun compactacionAgrupaRangos() {
-        val store = FileSessionStore(tmpDir())
+    fun compactacionAgrupaRangos() {        val store = FileSessionStore(tmpDir())
         // Fila 0: ix 0,1,2,5,6 → rangos [0-2],[5-6].
         val cells = setOf(
             (0L shl 32) xor (0L and 0xFFFFFFFFL),
@@ -148,5 +147,42 @@ class SessionStoreTest {
             widthM = 6.0, cells = cells)
         store.save(s)
         assertEquals(cells, assertNotNull(store.load("c")).cells)
+    }
+}
+
+class SessionJsonTest {
+
+    private fun celda(ix: Int, iy: Int): Long =
+        (ix.toLong() shl 32) xor (iy.toLong() and 0xFFFFFFFFL)
+
+    @Test
+    fun celdasRoundTrip() {
+        val cells = setOf(
+            celda(0, 0), celda(1, 0), celda(2, 0), celda(5, 0),
+            celda(-3, -7), celda(2_000_000, 1_000_000)
+        )
+        assertEquals(cells, SessionJson.decodeCells(SessionJson.encodeCells(cells)))
+    }
+
+    @Test
+    fun celdasVacias() {
+        assertEquals("{}", SessionJson.encodeCells(emptySet()))
+        assertEquals(emptySet(), SessionJson.decodeCells("{}"))
+    }
+
+    @Test
+    fun trackRoundTrip() {
+        val track = listOf(LatLon(41.0, -4.0), LatLon(41.5, -4.25), LatLon(-12.34, 179.9))
+        assertEquals(track, SessionJson.decodeTrack(SessionJson.encodeTrack(track)))
+        assertEquals(emptyList(), SessionJson.decodeTrack(SessionJson.encodeTrack(emptyList())))
+    }
+
+    @Test
+    fun codecExpandCompact() {
+        val rows = mapOf(0 to listOf(0 to 2, 5 to 6), -1 to listOf(10 to 10))
+        val cells = CellCodec.expand(rows)
+        assertEquals(6, cells.size)
+        assertEquals(rows, CellCodec.compact(cells))
+        assertEquals(emptyMap(), CellCodec.compact(emptySet()))
     }
 }

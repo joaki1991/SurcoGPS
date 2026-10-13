@@ -8,6 +8,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import es.surcogps.app.data.Ajustes
 import es.surcogps.app.data.AjustesRepository
+import es.surcogps.core.FileParcelaStore
+import es.surcogps.core.FileSessionStore
+import es.surcogps.core.Parcela
 import es.surcogps.app.cobertura.CoberturaEngine
 import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.app.gps.EstadoGuiado
@@ -97,6 +100,7 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
         engine!!.registrar(apero)
         _areaHa.value = engine!!.areaHa
         _tramos.value = engine!!.tramos.toList()
+        autoguardarSiToca()
     }
 
     /** Banderillero: combina ajustes + fix crudo a través del pipeline. */
@@ -152,8 +156,195 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     fun guardarOffset(lat: Double, lon: Double) = viewModelScope.launch { repo.guardarOffset(lat, lon) }
     fun guardarPuerta(p: Float) = viewModelScope.launch { repo.guardarPuerta(p) }
 
+    // ---- Parcelas y sesiones (ficheros locales vía :core; ver ADR-05) ----
+
+    private val sesionesStore: FileSessionStore by lazy {
+        FileSessionStore(java.io.File(getApplication<Application>().filesDir, "sesiones"))
+    }
+    private val parcelasStore: FileParcelaStore by lazy {
+        FileParcelaStore(java.io.File(getApplication<Application>().filesDir, "parcelas"))
+    }
+
+    private val _parcelas = MutableStateFlow<List<Parcela>>(emptyList())
+    val parcelas: StateFlow<List<Parcela>> = _parcelas.asStateFlow()
+
+    private val _sesiones = MutableStateFlow<List<es.surcogps.core.SessionSummary>>(emptyList())
+    val sesiones: StateFlow<List<es.surcogps.core.SessionSummary>> = _sesiones.asStateFlow()
+
+    private val _sesionActivaId = MutableStateFlow<String?>(null)
+    val sesionActivaId: StateFlow<String?> = _sesionActivaId.asStateFlow()
+
+    private val _sesionActivaNombre = MutableStateFlow<String?>(null)
+    val sesionActivaNombre: StateFlow<String?> = _sesionActivaNombre.asStateFlow()
+
+    private var ultimoAutoguardadoMs = 0L
+
+    private fun recargarListas() {
+        _parcelas.value = parcelasStore.listar()
+        _sesiones.value = sesionesStore.list()
+    }
+
+    init {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { recargarListas() }
+    }
+
+    /** Crea una parcela con la configuración actual. Requiere ancla fijada. */
+    fun crearParcela(nombre: String): Boolean {
+        val a = ajustes.value
+        if (a.anclaLat == null || a.anclaLon == null || nombre.isBlank()) return false
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            parcelasStore.guardar(
+                Parcela(
+                    id = java.util.UUID.randomUUID().toString(),
+                    nombre = nombre.trim(),
+                    ancla = LatLon(a.anclaLat, a.anclaLon),
+                    rumbo = a.rumboDeg,
+                    ancho = a.anchoAperoM,
+                    shift = a.desplazamientoLateralM,
+                    offset = ImplementOffset(a.offsetLateralM, a.offsetLongitudinalM),
+                    creadaMs = System.currentTimeMillis()
+                )
+            )
+            recargarListas()
+        }
+        return true
+    }
+
+    fun borrarParcela(id: String) = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        // Las sesiones son independientes (guardan su propia configuración).
+        parcelasStore.borrar(id)
+        recargarListas()
+    }
+
+    /** Carga la parcela en los ajustes (ancla + guía) para trabajar sobre ella. */
+    fun usarParcela(p: Parcela) = viewModelScope.launch {
+        repo.guardarAncla(p.ancla.lat, p.ancla.lon)
+        repo.guardarRumbo(p.rumbo)
+        repo.guardarAncho(p.ancho)
+        repo.guardarShift(p.shift)
+        repo.guardarOffset(p.offset.lateralM, p.offset.longitudinalM)
+        autoAnclaHecha = true
+    }
+
+    /** Foto de la sesión en curso para persistir (null si no hay ancla). */
+    fun fotoSesionActiva(): es.surcogps.core.WorkSession? {
+        val a = ajustes.value
+        val eng = engine ?: return null
+        if (a.anclaLat == null || a.anclaLon == null) return null
+        val ahora = System.currentTimeMillis()
+        return es.surcogps.core.WorkSession(
+            id = _sesionActivaId.value ?: return null,
+            name = _sesionActivaNombre.value ?: "Sesión en curso",
+            anchor = LatLon(a.anclaLat, a.anclaLon),
+            headingDeg = a.rumboDeg,
+            widthM = a.anchoAperoM,
+            lateralShiftM = a.desplazamientoLateralM,
+            offset = ImplementOffset(a.offsetLateralM, a.offsetLongitudinalM),
+            track = eng.snapshotTrack(),
+            cells = eng.snapshotCells(),
+            startedMs = ahora,
+            updatedMs = ahora,
+            finished = false
+        )
+    }
+
+    /** Inicia una sesión. Requiere ancla fijada. */
+    fun nuevaSesion(nombre: String? = null): Boolean {
+        val a = ajustes.value
+        if (a.anclaLat == null || a.anclaLon == null) return false
+        val ahora = System.currentTimeMillis()
+        val id = java.util.UUID.randomUUID().toString()
+        val sesion = es.surcogps.core.WorkSession(
+            id = id,
+            name = nombre ?: "Sesión ${java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale.getDefault()).format(java.util.Date(ahora))}",
+            anchor = LatLon(a.anclaLat, a.anclaLon),
+            headingDeg = a.rumboDeg,
+            widthM = a.anchoAperoM,
+            lateralShiftM = a.desplazamientoLateralM,
+            offset = ImplementOffset(a.offsetLateralM, a.offsetLongitudinalM),
+            startedMs = ahora,
+            updatedMs = ahora,
+            finished = false
+        )
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            sesionesStore.save(sesion)
+            recargarListas()
+        }
+        _sesionActivaId.value = id
+        _sesionActivaNombre.value = sesion.name
+        engine = CoberturaEngine(sesion.anchor, sesion.widthM)
+        engineKey = "${sesion.anchor.lat},${sesion.anchor.lon}|${sesion.widthM}"
+        _areaHa.value = 0.0
+        _tramos.value = emptyList()
+        ultimoAutoguardadoMs = ahora
+        return true
+    }
+
+    /** Reanuda una sesión guardada: ajustes + cuadrícula + dibujo intactos. */
+    fun reanudarSesion(id: String) = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        val s = sesionesStore.load(id) ?: return@launch
+        repo.guardarAncla(s.anchor.lat, s.anchor.lon)
+        repo.guardarRumbo(s.headingDeg)
+        repo.guardarAncho(s.widthM)
+        repo.guardarShift(s.lateralShiftM)
+        repo.guardarOffset(s.offset.lateralM, s.offset.longitudinalM)
+        autoAnclaHecha = true
+        val eng = CoberturaEngine(s.anchor, s.widthM)
+        eng.restaurar(s.cells, s.track, s.widthM)
+        engine = eng
+        engineKey = "${s.anchor.lat},${s.anchor.lon}|${s.widthM}"
+        _sesionActivaId.value = id
+        _sesionActivaNombre.value = s.name
+        _areaHa.value = eng.areaHa
+        _tramos.value = eng.tramos.toList()
+        pipeline.reiniciar()
+    }
+
+    /** Guarda la sesión activa (foto actual). */
+    fun guardarSesionActiva(terminada: Boolean = false) {
+        val id = _sesionActivaId.value ?: return
+        val foto = fotoSesionActiva() ?: return
+        ultimoAutoguardadoMs = System.currentTimeMillis()
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val previa = sesionesStore.load(id)
+            sesionesStore.save(
+                foto.copy(
+                    name = previa?.name ?: foto.name,
+                    startedMs = previa?.startedMs ?: foto.startedMs,
+                    updatedMs = ultimoAutoguardadoMs,
+                    finished = terminada
+                )
+            )
+            recargarListas()
+        }
+    }
+
+    fun terminarSesion() = guardarSesionActiva(terminada = true)
+
+    fun borrarSesion(id: String) = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        if (_sesionActivaId.value == id) {
+            _sesionActivaId.value = null
+            _sesionActivaNombre.value = null
+        }
+        sesionesStore.delete(id)
+        recargarListas()
+    }
+
+    private fun autoguardarSiToca() {
+        if (_sesionActivaId.value == null) return
+        val ahora = System.currentTimeMillis()
+        if (ahora - ultimoAutoguardadoMs < AUTOGUARDADO_MS) return
+        guardarSesionActiva()
+    }
+
     override fun onCleared() {
+        guardarSesionActiva()
         tracker.detener()
         super.onCleared()
+    }
+
+    companion object {
+        /** Intervalo mínimo entre autoguardados (ms). */
+        const val AUTOGUARDADO_MS = 15_000L
     }
 }

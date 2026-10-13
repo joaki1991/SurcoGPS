@@ -68,3 +68,10 @@
 - `CoberturaEngine` (umbral 10 cm, pausa sin fantasma) + `FranjaOverlay` (métrico,
   capa única) + HUD ha + auto-ancla. Tests app 16/16; assembleDebug OK.
 - Siguiente: SPRINT-10 (parcelas/sesiones Room + reanudación).
+
+## 2026-10-13 — SPRINT-10 PASS
+- Room descartado por anomalía de toolchain (documentada en ADR-05 e informe);
+  persistencia en ficheros JSON de `:core` (`FileParcelaStore` nuevo + contrato
+  `SessionStore`). Parcelas/sesiones UI reales, reanudación con cuadrícula
+  intacta, autoguardado 15 s + al salir. Core 70/70, app 17/17, APK OK.
+- Siguiente: SPRINT-11 (foreground service + robustez).

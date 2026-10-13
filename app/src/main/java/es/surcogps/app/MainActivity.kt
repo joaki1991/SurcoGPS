@@ -76,8 +76,8 @@ fun SurcoGPSApp() {
         val vm: CampoViewModel = viewModel()
         NavHost(nav, startDestination = "campo", Modifier.padding(inner)) {
             composable("campo") { CampoScreen(vm) }
-            composable("parcela") { ParcelaScreen() }
-            composable("sesion") { SesionScreen() }
+            composable("parcela") { ParcelaScreen(vm) }
+            composable("sesion") { SesionScreen(vm) }
             composable("ajustes") { AjustesScreen(vm) }
         }
     }
