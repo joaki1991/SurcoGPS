@@ -25,3 +25,9 @@
   prueba ambiguo a media calle, corregido). Informes en `.sdd/test-reports/SPRINT-02.md`
   y `.sdd/reviews/SPRINT-02.md`.
 - Siguiente: SPRINT-03 (CoverageTracker raster 1 m).
+
+## 2026-10-13 — SPRINT-03 PASS
+- `CoverageTracker` (cápsula segmento ± ancho/2, celdas 1 m, área sin duplicar).
+  Suite 34/34 verde; 4 expectativas iniciales recalibradas con valores medidos y
+  sobrestimación documentada. Informes SPRINT-03 en `.sdd/`.
+- Siguiente: SPRINT-04 (GpsFilter + ImplementOffset).
