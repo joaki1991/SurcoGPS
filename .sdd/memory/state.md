@@ -37,3 +37,9 @@
   (lateral/longitudinal rotados por rumbo). Suite 52/52 verde (1 empate de media
   calle en test, corregido). Informes SPRINT-04 en `.sdd/`.
 - Siguiente: SPRINT-05 (SessionStore persistencia JVM/JSON).
+
+## 2026-10-13 — SPRINT-05 PASS
+- `SessionStore` (contrato + `FileSessionStore` JSON sin dependencias + `MiniJson`),
+  celdas compactadas por filas. Suite 60/60 verde a la primera. Informes SPRINT-05.
+- Núcleo `:core` COMPLETO (sprints 01–05). Siguiente: instalar Android SDK
+  (cmdline-tools + plataforma 34) y SPRINT-06 (módulo `:app`).
