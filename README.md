@@ -39,7 +39,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | # | Sprint | Bloque | Dependencias | Estado |
 |---|--------|--------|--------------|--------|
 | 01 | Fundación: Gradle wrapper, `:core` Kotlin puro, JUnit5, CI local | A | — | ✅ PASS |
-| 02 | Geometría: GeoMath + GuidanceEngine (líneas paralelas, XTE, shift) | C | 01 | ⏳ pendiente |
+| 02 | Geometría: GeoMath + GuidanceEngine (líneas paralelas, XTE, shift) | C | 01 | ✅ PASS |
 | 03 | Cobertura: CoverageTracker raster 1 m, área sin duplicar | E | 02 | ⏳ pendiente |
 | 04 | GPS: GpsFilter + ImplementOffset | D/E | 02 | ⏳ pendiente |
 | 05 | Persistencia: SessionStore JSON/JVM + contrato Room | F | 03, 04 | ⏳ pendiente |

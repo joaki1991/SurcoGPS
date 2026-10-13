@@ -18,3 +18,10 @@
 - `.\gradlew.bat :core:test` → BUILD SUCCESSFUL, 2/2 PASS (ver
   `.sdd/test-reports/SPRINT-01.md`, `.sdd/reviews/SPRINT-01.md`).
 - Siguiente: commit + push SPRINT-01, luego SPRINT-02 (GeoMath + GuidanceEngine).
+
+## 2026-10-13 — SPRINT-02 PASS
+- `GeoMath` (ENU local, haversine, rumbo, destino) + `GuidanceEngine` (paralelas,
+  XTE con signo, shift, re-rumbo). Suite 23/23 verde (1 fallo inicial por punto de
+  prueba ambiguo a media calle, corregido). Informes en `.sdd/test-reports/SPRINT-02.md`
+  y `.sdd/reviews/SPRINT-02.md`.
+- Siguiente: SPRINT-03 (CoverageTracker raster 1 m).
