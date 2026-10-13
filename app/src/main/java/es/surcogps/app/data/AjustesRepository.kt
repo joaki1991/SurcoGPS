@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -36,6 +37,22 @@ class AjustesRepository(private val context: Context) {
         val PUERTA = floatPreferencesKey("puerta_precision_m")
         val ANCLA_LAT = doublePreferencesKey("ancla_lat")
         val ANCLA_LON = doublePreferencesKey("ancla_lon")
+        val TRACKING = booleanPreferencesKey("tracking_activo")
+        val SESION_ACTIVA = stringPreferencesKey("sesion_activa_id")
+    }
+
+    /** ¿Debe seguir el tracking tras muerte del proceso? (servicio + reboot). */
+    val trackingActivo: Flow<Boolean> = context.dataStore.data.map { it[Keys.TRACKING] ?: false }
+
+    /** Id de la sesión activa ("" = ninguna). */
+    val sesionActivaId: Flow<String> = context.dataStore.data.map { it[Keys.SESION_ACTIVA] ?: "" }
+
+    suspend fun guardarTracking(activo: Boolean) {
+        context.dataStore.edit { it[Keys.TRACKING] = activo }
+    }
+
+    suspend fun guardarSesionActivaId(id: String) {
+        context.dataStore.edit { it[Keys.SESION_ACTIVA] = id }
     }
 
     val ajustes: Flow<Ajustes> = context.dataStore.data.map { p ->

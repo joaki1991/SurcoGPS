@@ -48,7 +48,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 08 | GPS real + banderillero (velocidad, precisión, XTE) | D | 04, 07 | ✅ PASS |
 | 09 | Registro y coloreado de cobertura sobre el mapa | E | 03, 08 | ✅ PASS |
 | 10 | Parcelas/sesiones UI + reanudación | F | 05, 09 | ✅ PASS |
-| 11 | Foreground service + robustez (reinicios, batería, sin red) | G | 08, 10 | ⏳ pendiente |
+| 11 | Foreground service + robustez (reinicios, batería, sin red) | G | 08, 10 | ✅ PASS |
 | 12 | QA final + APKs + revisión seguridad + docs instalación | H | 06–11 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.

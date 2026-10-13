@@ -75,3 +75,9 @@
   `SessionStore`). Parcelas/sesiones UI reales, reanudación con cuadrícula
   intacta, autoguardado 15 s + al salir. Core 70/70, app 17/17, APK OK.
 - Siguiente: SPRINT-11 (foreground service + robustez).
+
+## 2026-10-13 — SPRINT-11 PASS
+- `MotorCampo` (ámbito app) + `TrackingService` (FGS `location`, START_STICKY,
+  notificación ha/XTE/Detener) + `ArranqueReceiver` + flags persistidos.
+  ViewModel adelgazado a fachada (pantallas intactas). App 20/20, core 70/70, APK.
+- Siguiente: SPRINT-12 (QA final + APKs + entrega).
