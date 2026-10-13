@@ -54,7 +54,9 @@ fun hayRed(context: Context): Boolean {
 fun MapaCampo(
     modo: ModoMapa,
     alCambiarModo: (ModoMapa) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Posición a seguir (null = no seguir). */
+    posicionSeguir: GeoPoint? = null
 ) {
     val context = LocalContext.current
     val mapView = remember {
@@ -115,6 +117,9 @@ fun MapaCampo(
                     if (cfg.conReferencia) {
                         val prov = FuentesMapa.referenceOverlayProvider(mv.context)
                         mv.overlays.add(TilesOverlay(prov, mv.context))
+                    }
+                    if (posicionSeguir != null) {
+                        mv.controller.setCenter(posicionSeguir)
                     }
                     mv.invalidate()
                 }

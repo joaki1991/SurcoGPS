@@ -1,12 +1,13 @@
 package es.surcogps.app.ui
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -14,32 +15,81 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import es.surcogps.app.mapa.MapaCampo
+import org.osmdroid.util.GeoPoint
 
-/** Pantalla de campo: mapa híbrido + resumen de guía. El GPS en vivo llega en el SPRINT-08. */
+/** Pantalla de campo: mapa híbrido + banderillero GPS en vivo. */
 @Composable
 fun CampoScreen(vm: CampoViewModel) {
     val a by vm.ajustes.collectAsState()
     val modo by vm.modoMapa.collectAsState()
+    val g by vm.guiado.collectAsState()
+    val seguir by vm.seguirPosicion.collectAsState()
+    val nmea by vm.nmeaSentencias.collectAsState()
+
+    val permisoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { concedidos ->
+        if (concedidos[Manifest.permission.ACCESS_FINE_LOCATION] == true) vm.iniciarGps()
+    }
+    DisposableEffect(Unit) {
+        if (vm.tienePermisoUbicacion()) vm.iniciarGps()
+        onDispose { vm.detenerGps() }
+    }
+
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         MapaCampo(
             modo = modo,
             alCambiarModo = vm::cambiarModoMapa,
-            modifier = Modifier.fillMaxWidth().weight(1f)
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            posicionSeguir = if (seguir) g.posicionApero?.let { GeoPoint(it.lat, it.lon) } else null
         )
-        Text("Rumbo: ${"%.0f".format(a.rumboDeg)}°  ·  Ancho: ${"%.1f".format(a.anchoAperoM)} m  ·  Puerta: ${"%.0f".format(a.puertaPrecisionM)} m")
-        Spacer(Modifier.height(8.dp))
-        Text("Ajuste rápido de rumbo")
+        // HUD del banderillero: precisión SIEMPRE visible (GPS de móvil = métrico).
+        Text(
+            if (g.fix == null) "Sin posición: concede el permiso de ubicación."
+            else "Precisión ±${"%.0f".format(g.fix!!.accuracyM)} m · " +
+                "Vel ${if (g.fix!!.speedMps != null) "%.1f".format(g.fix!!.speedMps!! * 3.6) else "—"} km/h" +
+                if (g.aceptado && g.xteM != null)
+                    " · Línea ${g.linea} · XTE ${"%+.1f".format(g.xteM)} m ${if (g.xteM!! > 0.3) "→" else if (g.xteM!! < -0.3) "←" else "✓"}"
+                else if (!g.aceptado) " · Fix rechazado (${g.motivoRechazo})"
+                else " · Fija el ancla para guiar",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            "Rumbo ${"%.0f".format(a.rumboDeg)}° · Ancho ${"%.1f".format(a.anchoAperoM)} m · " +
+                "NMEA: $nmea sentencias",
+            style = MaterialTheme.typography.bodySmall
+        )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { vm.guardarRumbo(a.rumboDeg - 1) }, modifier = Modifier.weight(1f)) {
-                Text("−1°")
+            if (!vm.tienePermisoUbicacion()) {
+                Button(
+                    onClick = {
+                        permisoLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Permitir ubicación")
+                }
             }
-            OutlinedButton(onClick = { vm.guardarRumbo(a.rumboDeg + 1) }, modifier = Modifier.weight(1f)) {
-                Text("+1°")
+            OutlinedButton(
+                onClick = vm::fijarAnclaAqui,
+                enabled = g.posicionApero != null,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(if (a.anclaLat == null) "Fijar ancla aquí" else "Mover ancla aquí")
+            }
+            OutlinedButton(onClick = vm::alternarSeguir, modifier = Modifier.weight(1f)) {
+                Text(if (seguir) "No seguir" else "Seguir")
             }
         }
         Text("Ancho del apero: ${"%.1f".format(a.anchoAperoM)} m")
@@ -49,8 +99,5 @@ fun CampoScreen(vm: CampoViewModel) {
             valueRange = 0.5f..30f,
             steps = 58
         )
-        Button(onClick = { vm.guardarShift(0.0) }, enabled = a.desplazamientoLateralM != 0.0) {
-            Text("Centrar shift lateral")
-        }
     }
 }

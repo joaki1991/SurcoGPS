@@ -57,3 +57,9 @@
 - Deuda: verificación visual en pantalla pendiente de dispositivo (sin VT-x para
   emulador, `adb devices` vacío). Anotado para Sprint 12.
 - Siguiente: SPRINT-08 (GPS real + banderillero).
+
+## 2026-10-13 — SPRINT-08 PASS
+- Fused (1 s, alta precisión) + NMEA diagnóstico + `GuiadoPipeline`
+  (Fix→Filtro→Offset→Guía) + HUD (precisión/vel/XTE/flecha) + ancla persistida +
+  seguir-posición. Tests app 10/10; assembleDebug OK.
+- Siguiente: SPRINT-09 (registro y coloreado de cobertura sobre el mapa).

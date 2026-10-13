@@ -18,7 +18,10 @@ data class Ajustes(
     val desplazamientoLateralM: Double = 0.0,
     val offsetLateralM: Double = 0.0,
     val offsetLongitudinalM: Double = 0.0,
-    val puertaPrecisionM: Float = 10f
+    val puertaPrecisionM: Float = 10f,
+    /** Ancla de la guía (null = sin fijar). */
+    val anclaLat: Double? = null,
+    val anclaLon: Double? = null
 )
 
 /** Repositorio de ajustes con validación de rangos del dominio. */
@@ -31,6 +34,8 @@ class AjustesRepository(private val context: Context) {
         val OFF_LAT = doublePreferencesKey("offset_lateral_m")
         val OFF_LON = doublePreferencesKey("offset_longitudinal_m")
         val PUERTA = floatPreferencesKey("puerta_precision_m")
+        val ANCLA_LAT = doublePreferencesKey("ancla_lat")
+        val ANCLA_LON = doublePreferencesKey("ancla_lon")
     }
 
     val ajustes: Flow<Ajustes> = context.dataStore.data.map { p ->
@@ -40,7 +45,9 @@ class AjustesRepository(private val context: Context) {
             desplazamientoLateralM = p[Keys.SHIFT] ?: 0.0,
             offsetLateralM = p[Keys.OFF_LAT] ?: 0.0,
             offsetLongitudinalM = p[Keys.OFF_LON] ?: 0.0,
-            puertaPrecisionM = p[Keys.PUERTA] ?: 10f
+            puertaPrecisionM = p[Keys.PUERTA] ?: 10f,
+            anclaLat = if (p.contains(Keys.ANCLA_LAT)) p[Keys.ANCLA_LAT] else null,
+            anclaLon = if (p.contains(Keys.ANCLA_LON)) p[Keys.ANCLA_LON] else null
         )
     }
 
@@ -70,5 +77,20 @@ class AjustesRepository(private val context: Context) {
     suspend fun guardarPuerta(puertaM: Float) {
         require(puertaM in 1f..50f) { "puerta fuera de rango [1, 50] m" }
         context.dataStore.edit { it[Keys.PUERTA] = puertaM }
+    }
+
+    suspend fun guardarAncla(lat: Double, lon: Double) {
+        require(lat in -90.0..90.0 && lon in -180.0..180.0) { "ancla inválida" }
+        context.dataStore.edit {
+            it[Keys.ANCLA_LAT] = lat
+            it[Keys.ANCLA_LON] = lon
+        }
+    }
+
+    suspend fun borrarAncla() {
+        context.dataStore.edit {
+            it.remove(Keys.ANCLA_LAT)
+            it.remove(Keys.ANCLA_LON)
+        }
     }
 }
