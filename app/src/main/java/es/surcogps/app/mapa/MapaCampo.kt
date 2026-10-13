@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import es.surcogps.app.cobertura.TramoFranja
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -56,9 +57,12 @@ fun MapaCampo(
     alCambiarModo: (ModoMapa) -> Unit,
     modifier: Modifier = Modifier,
     /** Posición a seguir (null = no seguir). */
-    posicionSeguir: GeoPoint? = null
+    posicionSeguir: GeoPoint? = null,
+    /** Franja trabajada a colorear (anchura métrica real). */
+    tramos: List<TramoFranja> = emptyList()
 ) {
     val context = LocalContext.current
+    val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
     val mapView = remember {
         Configuration.getInstance().load(
             context.applicationContext,
@@ -72,6 +76,8 @@ fun MapaCampo(
             setBuiltInZoomControls(true)
             controller.setZoom(6.0)
             controller.setCenter(VISTA_DEFECTO)
+            // La franja trabajada vive en una única capa (eficiente).
+            if (!overlays.contains(franja)) overlays.add(franja)
         }
     }
     DisposableEffect(Unit) {
@@ -121,6 +127,7 @@ fun MapaCampo(
                     if (posicionSeguir != null) {
                         mv.controller.setCenter(posicionSeguir)
                     }
+                    franja.actualizar(tramos)
                     mv.invalidate()
                 }
             )

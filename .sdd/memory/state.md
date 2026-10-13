@@ -63,3 +63,8 @@
   (Fix→Filtro→Offset→Guía) + HUD (precisión/vel/XTE/flecha) + ancla persistida +
   seguir-posición. Tests app 10/10; assembleDebug OK.
 - Siguiente: SPRINT-09 (registro y coloreado de cobertura sobre el mapa).
+
+## 2026-10-13 — SPRINT-09 PASS
+- `CoberturaEngine` (umbral 10 cm, pausa sin fantasma) + `FranjaOverlay` (métrico,
+  capa única) + HUD ha + auto-ancla. Tests app 16/16; assembleDebug OK.
+- Siguiente: SPRINT-10 (parcelas/sesiones Room + reanudación).

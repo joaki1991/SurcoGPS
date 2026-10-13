@@ -31,6 +31,9 @@ fun CampoScreen(vm: CampoViewModel) {
     val g by vm.guiado.collectAsState()
     val seguir by vm.seguirPosicion.collectAsState()
     val nmea by vm.nmeaSentencias.collectAsState()
+    val ha by vm.areaHa.collectAsState()
+    val tramos by vm.tramosDibujo.collectAsState()
+    val registrando by vm.registrando.collectAsState()
 
     val permisoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -47,7 +50,8 @@ fun CampoScreen(vm: CampoViewModel) {
             modo = modo,
             alCambiarModo = vm::cambiarModoMapa,
             modifier = Modifier.fillMaxWidth().weight(1f),
-            posicionSeguir = if (seguir) g.posicionApero?.let { GeoPoint(it.lat, it.lon) } else null
+            posicionSeguir = if (seguir) g.posicionApero?.let { GeoPoint(it.lat, it.lon) } else null,
+            tramos = tramos
         )
         // HUD del banderillero: precisión SIEMPRE visible (GPS de móvil = métrico).
         Text(
@@ -62,7 +66,7 @@ fun CampoScreen(vm: CampoViewModel) {
         )
         Text(
             "Rumbo ${"%.0f".format(a.rumboDeg)}° · Ancho ${"%.1f".format(a.anchoAperoM)} m · " +
-                "NMEA: $nmea sentencias",
+                "Trabajado ${"%.2f".format(ha)} ha · NMEA: $nmea sentencias",
             style = MaterialTheme.typography.bodySmall
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -90,6 +94,13 @@ fun CampoScreen(vm: CampoViewModel) {
             }
             OutlinedButton(onClick = vm::alternarSeguir, modifier = Modifier.weight(1f)) {
                 Text(if (seguir) "No seguir" else "Seguir")
+            }
+            OutlinedButton(
+                onClick = vm::alternarRegistro,
+                enabled = g.posicionApero != null,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(if (registrando) "Pausar" else "Registrar")
             }
         }
         Text("Ancho del apero: ${"%.1f".format(a.anchoAperoM)} m")
