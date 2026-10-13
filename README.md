@@ -142,6 +142,12 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 
 ## 12. Instalación y uso (v1.0.0)
 
+### Descarga directa desde GitHub
+- **APK listo para instalar**: [`releases/SurcoGPS-v1.0.0-release.apk`](releases/SurcoGPS-v1.0.0-release.apk)
+  (8,3 MB, firmado, `es.surcogps.app` v1). En la web de GitHub: abre la carpeta
+  `releases/`, clic en el fichero → **Download** (o botón ⬇ Raw).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.0.0-release.apk`
+
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
 - Lanzamiento: `app/build/outputs/apk/release/app-release.apk` (8,3 MB, firmada con clave
