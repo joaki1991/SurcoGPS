@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
@@ -105,8 +106,7 @@ class MotorCampo(private val app: Application) {
     private var ultimoAutoguardadoMs = 0L
 
     /** Banderillero: ajustes + fix crudo a través del pipeline. */
-    val guiado: StateFlow<EstadoGuiado> =
-        combine(ajustes, tracker.fix) { a, fix ->
+    val guiado: StateFlow<EstadoGuiado> =        combine(ajustes, tracker.fix) { a, fix ->
             if (fix == null) return@combine EstadoGuiado()
             pipeline.configurarPuerta(a.puertaPrecisionM)
             val guia = if (a.anclaLat != null && a.anclaLon != null) {
@@ -221,6 +221,25 @@ class MotorCampo(private val app: Application) {
         val p = guiado.value.posicionApero ?: guiado.value.fix?.position ?: return
         alcance.launch { repo.guardarAncla(p.lat, p.lon) }
     }
+
+    /** Fija el ancla en un punto elegido en el mapa (long-press). */
+    fun fijarAnclaEn(p: LatLon) {
+        if (p.lat !in -90.0..90.0 || p.lon !in -180.0..180.0) return
+        autoAnclaHecha = true
+        alcance.launch { repo.guardarAncla(p.lat, p.lon) }
+    }
+
+    /** Guía actual para dibujar las paralelas (null = sin ancla). */
+    val guiaActual: StateFlow<GuidanceEngine?> = ajustes.map { a ->
+        if (a.anclaLat != null && a.anclaLon != null) {
+            GuidanceEngine(
+                anchor = LatLon(a.anclaLat, a.anclaLon),
+                headingDeg = a.rumboDeg,
+                implementWidthM = a.anchoAperoM,
+                lateralShiftM = a.desplazamientoLateralM
+            )
+        } else null
+    }.stateIn(alcance, SharingStarted.WhileSubscribed(5_000), null)
 
     fun guardarRumbo(r: Double) = alcance.launch { repo.guardarRumbo(r) }
     fun guardarAncho(a: Double) = alcance.launch { repo.guardarAncho(a) }

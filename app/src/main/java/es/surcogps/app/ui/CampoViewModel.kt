@@ -11,6 +11,7 @@ import es.surcogps.app.mapa.DestinoCamara
 import es.surcogps.app.mapa.EstadoUbicacion
 import es.surcogps.app.mapa.ModoMapa
 import es.surcogps.app.mapa.SuavizadorRumbo
+import es.surcogps.core.GuidanceEngine
 import es.surcogps.core.Parcela
 import es.surcogps.core.SessionSummary
 import es.surcogps.core.WorkSession
@@ -40,6 +41,7 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     val sesionActivaId: StateFlow<String?> = motor.sesionActivaId
     val sesionActivaNombre: StateFlow<String?> = motor.sesionActivaNombre
     val destinoCamara: StateFlow<DestinoCamara?> = motor.destinoCamara
+    val guiaActual: StateFlow<GuidanceEngine?> = motor.guiaActual
 
     // Suavizado del rumbo de marcha para la flecha (con estado entre fixes).
     private val suavizador = SuavizadorRumbo()
@@ -90,6 +92,7 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun alternarRegistro() = motor.alternarRegistro()
     fun fijarAnclaAqui() = motor.fijarAnclaAqui()
+    fun fijarAnclaEn(p: es.surcogps.core.LatLon) = motor.fijarAnclaEn(p)
     fun guardarRumbo(r: Double) = motor.guardarRumbo(r)
     fun guardarAncho(a: Double) = motor.guardarAncho(a)
     fun guardarShift(s: Double) = motor.guardarShift(s)

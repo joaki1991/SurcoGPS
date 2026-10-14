@@ -61,7 +61,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 20 | QA + v1.2.0 en releases/ | QA | 19 | ✅ PASS |
 | 21 | Diagnóstico captura 2 (teselas, sangrado, líneas) + plan 22–24 | Mapa | — | 🟡 en curso |
 | 22 | VigilanteTeselas (ok/fallo) + píldora + UA + clipToBounds | Mapa | 21 | ✅ PASS |
-| 23 | Líneas guía en mapa + ancla por toque + marcador | Guía | 21 | ⏳ pendiente |
+| 23 | Líneas guía en mapa + ancla por toque + marcador | Guía | 21 | ✅ PASS |
 | 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.

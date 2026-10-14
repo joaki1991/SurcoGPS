@@ -132,3 +132,12 @@
 ## 2026-10-14 — SPRINT-20 PASS · FASE 3 TERMINADA (v1.2.0)
 - Suites forzadas: core 70/70 + app 40/40. Release v1.2.0 (8 597 308 B) firmada y
   verificada en `releases/`. Se pide captura de confirmación (chips, teselas, píldora).
+
+## 2026-10-14 - SPRINT-21 PASS - FASE 4 EN CURSO
+- Diagnostico con evidencia (Esri OK, OSM con throttling, API callbacks via javap).
+
+## 2026-10-14 - SPRINT-22 PASS
+- VigilanteTeselas en pildora + UA con contacto + clipToBounds. App 41/41. Siguiente: SPRINT-23.
+
+## 2026-10-14 - SPRINT-23 PASS
+- LineasOverlay (paralelas + activa + ancla + long-press con Toast). App 45/45. Siguiente: SPRINT-24 (QA + v1.3.0).

@@ -103,6 +103,10 @@ fun MapaCampo(
     tramos: List<TramoFranja> = emptyList(),
     /** Indicador de posición (null = sin fix; no dibuja nada). */
     ubicacion: EstadoUbicacion? = null,
+    /** Guía de paralelas (null = sin ancla; no dibuja nada). */
+    guia: EstadoGuia? = null,
+    /** Long-press en el mapa → fijar ancla. */
+    alFijarAncla: (LatLon) -> Unit = { _ -> },
     /** Botón «Mi ubicación» (false = deshabilitado, sin posición). */
     puedeIrAUbicacion: Boolean = false,
     alIrAUbicacion: () -> Unit = {}
@@ -110,6 +114,8 @@ fun MapaCampo(
     val context = LocalContext.current
     val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
     val punto = remember { UbicacionOverlay() }
+    val fijaActual by rememberUpdatedState(alFijarAncla)
+    val lineas = remember { LineasOverlay { p -> fijaActual(p) } }
     val aplicado = remember { EstadoMapaAplicado() }
     val gestoActual by rememberUpdatedState(alGestoManual)
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
@@ -153,8 +159,9 @@ fun MapaCampo(
             setBuiltInZoomControls(false)
             controller.setZoom(6.0)
             controller.setCenter(VISTA_DEFECTO)
-            // Capas persistentes (orden: franja, punto, atribución encima).
+            // Capas persistentes (orden: referencia, franja, líneas, punto, atribución).
             overlays.add(franja)
+            overlays.add(lineas)
             overlays.add(punto)
             overlays.add(CopyrightOverlay(context))
             addMapListener(object : MapListener {
@@ -227,10 +234,13 @@ fun MapaCampo(
                     redibujar = true
                 }
                 if (!seguir) aplicado.ultimoCentro = null
-                // 4. Capas de datos (nunca tocan fuentes ni teselas).
-                franja.actualizar(tramos)
-                punto.actualizar(ubicacion)
-                if (redibujar || tramos.isNotEmpty() || ubicacion != null) mv.invalidate()
+                    // 4. Capas de datos (nunca tocan fuentes ni teselas).
+                    franja.actualizar(tramos)
+                    punto.actualizar(ubicacion)
+                    lineas.actualizar(guia?.engine, guia?.lineaActiva)
+                    if (redibujar || tramos.isNotEmpty() || ubicacion != null || guia != null) {
+                        mv.invalidate()
+                    }
             }
         )
         // Controles SIEMPRE visibles, flotando sobre el mapa.

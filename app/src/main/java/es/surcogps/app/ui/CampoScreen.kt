@@ -34,6 +34,7 @@ fun CampoScreen(vm: CampoViewModel) {
     val seguir by vm.seguirPosicion.collectAsState()
     val destino by vm.destinoCamara.collectAsState()
     val ubicacion by vm.ubicacion.collectAsState()
+    val guiaMotor by vm.guiaActual.collectAsState()
     val nmea by vm.nmeaSentencias.collectAsState()
     val ha by vm.areaHa.collectAsState()
     val tramos by vm.tramosDibujo.collectAsState()
@@ -61,6 +62,8 @@ fun CampoScreen(vm: CampoViewModel) {
             alGestoManual = vm::alGestoManual,
             tramos = tramos,
             ubicacion = ubicacion,
+            guia = guiaMotor?.let { es.surcogps.app.mapa.EstadoGuia(it, g.linea) },
+            alFijarAncla = vm::fijarAnclaEn,
             puedeIrAUbicacion = g.posicionApero != null,
             alIrAUbicacion = vm::irAUbicacion
         )
