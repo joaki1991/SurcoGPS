@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 9 TERMINADA (sprints 35-36 PASS) — entrega v1.5.1.
-> Se pide captura tras 30 s quieto (píldora `Cola` + mapa).
+> **Estado global:** 🟡 FASE 10 EN CURSO (diagnóstico bloqueos; v1.5.1 entregada).
+> Sprint 38 bloqueado hasta recibir logs del dispositivo (ver informe SPRINT-37).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -75,6 +75,9 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ✅ PASS |
 | 35 | Quitar topes de descarga (vuelven valores de serie) | Mapa | — | ✅ PASS |
 | 36 | QA + v1.5.1 en releases/ | QA | 35 | ✅ PASS |
+| 37 | Diagnóstico bloqueos + mapa (fuentes osmdroid + protocolo) | Diag | — | 🟡 en curso |
+| 38 | Correcciones con evidencia + validación física (pendiente logs) | Mapa | 37 | ⏳ pendiente |
+| 39 | Regresión + protocolo físico + release | QA | 38 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -180,6 +183,13 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-36 — QA + v1.5.1
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.5.1-release.apk`
   verificado, informe.
+### SPRINT-37 — Diagnóstico bloqueos + mapa
+- Aceptación: fuentes osmdroid citadas, causas graduadas, protocolo logcat,
+  info faltante documentada. Sin cambios de código.
+### SPRINT-38 — Correcciones con evidencia (pendiente logs del dispositivo)
+- Aceptación: solo fixes derivados de evidencia + validación física declarada.
+### SPRINT-39 — Regresión + release (pendiente validación física)
+- Aceptación: tests, protocolo físico ejecutado por el propietario, APK.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -192,6 +202,7 @@ Fase 6 (fix NPE): 27 → 28.
 Fase 7 (reversión mapa): 29 → 30.
 Fase 8 (fluidez + rumbo home + rotación): 31 → 32 · 31 → 33 · 32 + 33 → 34.
 Fase 9 (topes de descarga): 35 → 36.
+Fase 10 (bloqueos + mapa gris): 37 → 38 → 39 (38–39 pendientes de logs).
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -264,7 +275,8 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 33 | `2743fcf` | OK |
 | 34 | `a236943` | OK |
 | 35 | `b2fd183` | OK |
-| 36 | (este commit) | (con este push) |
+| 36 | `c9abe2f` | OK |
+| 37 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 

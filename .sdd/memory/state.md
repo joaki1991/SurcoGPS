@@ -180,3 +180,6 @@
 
 ## 2026-10-14 - SPRINT-36 PASS - FASE 9 TERMINADA (v1.5.1)
 - Suites forzadas 70/70 + 59/59. Release v1.5.1 firmada en releases/. Pendiente: captura tras 30 s quieto.
+
+## 2026-10-14 - SPRINT-37 PASS
+- Fuentes osmdroid leidas (NPE/thread-death confirmados, sin auto-reintento, cache blanda). Protocolo logcat listo. 38 pendiente de logs.
