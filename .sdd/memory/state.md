@@ -82,11 +82,16 @@
   ViewModel adelgazado a fachada (pantallas intactas). App 20/20, core 70/70, APK.
 - Siguiente: SPRINT-12 (QA final + APKs + entrega).
 
-## 2026-10-13 — SPRINT-12 PASS · PROYECTO TERMINADO (v1.0.0)
-- Suites: core 70/70, app 20/20. `assembleDebug` + `assembleRelease` (lint vital OK).
+## 2026-10-13 — SPRINT-12 PASS · PROYECTO TERMINADO (v1.0.0)- Suites: core 70/70, app 20/20. `assembleDebug` + `assembleRelease` (lint vital OK).
 - APKs: debug 11 648 261 B + release 8 266 192 B, package `es.surcogps.app`,
   min 26/target 34, firmas verificadas (`CN=SurcoGPS-Dev`, huella documentada).
 - Seguridad PASS (sin secretos/TODOs, permisos mínimos, sin telemetría).
 - README con instalación, uso, firma y verificación en hardware pendiente.
 - Deuda única: prueba en dispositivo (sin hardware ni VT-x aquí).
 - Historial: 12 commits (1 por sprint), pushes OK. Cierre con commit + push final.
+
+## 2026-10-14 — FASE 2 (mantenimiento). SPRINT-13 PASS
+- Diagnóstico del parpadeo (4 causas en `MapaCampo.update`), plan 14–17 en README,
+  icono fuente localizado (`Downloads\FaviconSurcoGPS.png`, 1254×1254, verificado).
+- Rama: se sigue en `main` (la petición decía `master`, pero el repo usa `main`).
+- Siguiente: SPRINT-14 (icono personalizado).

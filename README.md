@@ -1,6 +1,6 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ TERMINADO (12/12 PASS) — entrega v1.0.0 con APKs verificados.
+> **Estado global:** 🟡 FASE 2 EN CURSO (corrección y estabilización; v1.0.0 entregada 12/12 PASS).
 > Deuda explícita: prueba en hardware pendiente (sin dispositivo/VT-x en este equipo).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
@@ -51,6 +51,11 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 10 | Parcelas/sesiones UI + reanudación | F | 05, 09 | ✅ PASS |
 | 11 | Foreground service + robustez (reinicios, batería, sin red) | G | 08, 10 | ✅ PASS |
 | 12 | QA final + APKs + revisión seguridad + docs instalación | H | 06–11 | ✅ PASS |
+| 13 | Diagnóstico fase 2 + planificación (parpadeo, punto azul, icono, zoom auto) | — | — | 🟡 en curso |
+| 14 | Icono personalizado (fuente del propietario → mipmaps + adaptativo) | Icono | 13 | ⏳ pendiente |
+| 15 | Estabilidad del mapa (anti-parpadeo: fuentes/capas/cámara) | Mapa | 13 | ⏳ pendiente |
+| 16 | Punto azul + cono de precisión + flecha de rumbo | GPS | 13 | ⏳ pendiente |
+| 17 | Zoom detalle automático en primer fix + botón «Mi ubicación» + v1.1.0 | GPS | 13, 15 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -87,10 +92,26 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-12 — Entrega
 - Aceptación: `app-debug.apk` + `app-release.apk` existen, badging = `es.surcogps.app`,
   firma verificada, README documenta instalación, revisión seguridad PASS.
+### SPRINT-13 — Diagnóstico fase 2
+- Aceptación: causas del parpadeo identificadas en código + plan de sprints 14–17 publicado.
+### SPRINT-14 — Icono
+- Aceptación: `android:icon` propio desde la fuente del propietario (mipmaps por
+  densidad + adaptativo), `aapt` resuelve el icono, nombre «SurcoGPS».
+### SPRINT-15 — Estabilidad del mapa
+- Aceptación: sin `setTileSource` ni recreación de capas por fix GPS; cámara solo
+  por comando o seguimiento con gesto respetado; sin parpadeo inducido por recomposición.
+### SPRINT-16 — Posición y orientación
+- Aceptación: punto azul + cono de precisión + flecha de rumbo de marcha suavizado;
+  parado = sin flecha; sin brújula (documentado); centrado disponible.
+### SPRINT-17 — Zoom automático + v1.1.0
+- Aceptación: primer fix válido centra + zoom 19 (una vez); gestos manuales
+  respetados; botón «Mi ubicación» reencuadra; `releases/SurcoGPS-v1.1.0-release.apk`
+  verificado.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
 01 → 06 → 07 → 08 → 09 → 10 → 11 → 12 · 04 alimenta 08 · 05 alimenta 10.
+Fase 2: 13 → 14 · 13 → 15 → 17 · 13 → 16.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -102,7 +123,7 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ## 8. Pruebas necesarias
 - Unitarias JUnit5 en `:core` (obligatorias desde sprint 02).
 - Integración (store round-trip, guidance+coverage+filter encadenados).
-- App: `assembleDebug`,逐步 ejecución en emulador/dispositivo con mock locations.
+- App: `assembleDebug`, ejecución en emulador/dispositivo con mock locations.
 - QA final: flujo completo campo simulado + revisión seguridad + verificación artefactos.
 
 ## 9. Comandos de compilación y verificación (PowerShell)
@@ -138,7 +159,9 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 09 | `7ae4bc8` | OK |
 | 10 | `45abf98` | OK |
 | 11 | `c02f944` | OK |
-| 12 | (este commit) | (con este push) |
+| 12 | `e8285e2` | OK |
+| Entrega APK | `88dd177` | OK |
+| 13 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
