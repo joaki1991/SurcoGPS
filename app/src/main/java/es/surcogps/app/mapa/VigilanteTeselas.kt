@@ -11,9 +11,15 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Contadores de teselas (diagnóstico visible en la píldora del mapa). */
 data class StatsTeselas(val ok: Int = 0, val fallos: Int = 0, val caducadas: Int = 0)
 
-/** Texto compacto de la píldora («▦ 24 ok · 0 fallo»). Lógica pura, testeable. */
-fun textoTeselas(s: StatsTeselas): String =
-    "▦ ${s.ok} ok · ${s.fallos} fallo"
+/** Texto compacto de la píldora («▦ 24 ok · 0 fallo · HTTP ok»). Lógica pura, testeable. */
+fun textoTeselas(s: StatsTeselas, httpOk: Boolean?): String {
+    val http = when (httpOk) {
+        null -> "HTTP…"
+        true -> "HTTP ok"
+        false -> "HTTP fallo"
+    }
+    return "▦ ${s.ok} ok · ${s.fallos} fallo · $http"
+}
 
 /**
  * Proveedor de teselas que CUENTA resultados (ok/fallo/caducada) y avisa en el
@@ -47,7 +53,9 @@ class VigilanteTeselas(
         else principal.post { alCambiar(s) }
     }
 
-    override fun mapTileRequestCompleted(aState: MapTileRequestState, aDrawable: Drawable) {
+    // NOTA: osmdroid puede entregar drawable NULO (tesela vacía/caducada sin
+    // imagen). Declararlo no-nulo rompía el hilo downloader con NPE (v1.3.1).
+    override fun mapTileRequestCompleted(aState: MapTileRequestState, aDrawable: Drawable?) {
         super.mapTileRequestCompleted(aState, aDrawable)
         ok.incrementAndGet()
         avisar()
@@ -65,7 +73,7 @@ class VigilanteTeselas(
         avisar()
     }
 
-    override fun mapTileRequestExpiredTile(aState: MapTileRequestState, aDrawable: Drawable) {
+    override fun mapTileRequestExpiredTile(aState: MapTileRequestState, aDrawable: Drawable?) {
         super.mapTileRequestExpiredTile(aState, aDrawable)
         caducadas.incrementAndGet()
         avisar()

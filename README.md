@@ -1,7 +1,6 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 5 TERMINADA (sprints 25–26 PASS) — entrega v1.3.1.
-> Si se cierra al arrancar: la app muestra tarjeta con informe para compartir.
+> **Estado global:** 🟡 FASE 6 EN CURSO (fix del cierre NPE; v1.3.1 entregada).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -65,6 +64,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ✅ PASS |
 | 25 | Informe de cierre en app + arranque a prueba de fallos | Estabilidad | — | ✅ PASS |
 | 26 | QA + v1.3.1 en releases/ | QA | 25 | ✅ PASS |
+| 27 | Fix NPE drawable nulo + HTTP en píldora | Estabilidad | — | ✅ PASS |
+| 28 | QA + v1.3.2 en releases/ | QA | 27 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -143,6 +144,11 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-26 — QA + v1.3.1
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.3.1-release.apk`
   verificado, informe.
+### SPRINT-27 — Fix NPE + HTTP en píldora
+- Aceptación: overrides con `Drawable?` (sin NPE); píldora con HTTP; suite verde.
+### SPRINT-28 — QA + v1.3.2
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.3.2-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -151,6 +157,7 @@ Fase 2: 13 → 14 · 13 → 15 → 17 · 13 → 16.
 Fase 3 (mapa): 18 → 19 → 20.
 Fase 4 (teselas + líneas): 21 → 22 · 21 → 23 · 22 + 23 → 24.
 Fase 5 (cierre v1.3.0): 25 → 26.
+Fase 6 (fix NPE): 27 → 28.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.

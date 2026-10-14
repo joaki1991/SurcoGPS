@@ -136,11 +136,13 @@ fun MapaCampo(
             if (configPara(modo).base == BaseFuente.ESRI) EstadoRed.COMPROBANDO else null
         )
     }
+    var httpOk by remember(modo) { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(modo) {
         if (configPara(modo).base == BaseFuente.ESRI) {
             val ok = withContext(Dispatchers.IO) {
                 DiagnosticoTeselas.comprobar(FuentesMapa.urlMuestraEsri())
             }
+            httpOk = ok
             estadoRed = if (ok) EstadoRed.OK else EstadoRed.FALLO
         } else {
             estadoRed = null
@@ -311,7 +313,7 @@ fun MapaCampo(
                 modifier = Modifier.alpha(0.94f)
             ) {
                 Text(
-                    textoTeselas(suma),
+                    textoTeselas(suma, httpOk),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
