@@ -159,3 +159,6 @@
 
 ## 2026-10-14 - SPRINT-29 PASS
 - Reversion a proveedor estandar + hilos/cola acotados + pildora de cola + tests locales. App 53/53.
+
+## 2026-10-14 - SPRINT-30 PASS - FASE 7 TERMINADA (v1.4.0)
+- Suites forzadas 70/70 + 53/53. Release v1.4.0 firmada en releases/. Pendiente: captura (Cola + mapa + lineas).
