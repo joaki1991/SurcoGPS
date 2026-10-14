@@ -1,6 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** 🟡 FASE 6 EN CURSO (fix del cierre NPE; v1.3.1 entregada).
+> **Estado global:** ✅ FASE 6 TERMINADA (sprints 27–28 PASS) — entrega v1.3.2.
+> Se pide captura con la píldora completa (`▦ ok · fallo · HTTP …`).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -65,7 +66,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 25 | Informe de cierre en app + arranque a prueba de fallos | Estabilidad | — | ✅ PASS |
 | 26 | QA + v1.3.1 en releases/ | QA | 25 | ✅ PASS |
 | 27 | Fix NPE drawable nulo + HTTP en píldora | Estabilidad | — | ✅ PASS |
-| 28 | QA + v1.3.2 en releases/ | QA | 27 | ⏳ pendiente |
+| 28 | QA + v1.3.2 en releases/ | QA | 27 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -223,12 +224,12 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.3.1 (actual)**: [`releases/SurcoGPS-v1.3.1-release.apk`](releases/SurcoGPS-v1.3.1-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.3.1: informe de cierre compartible +
-  arranque a prueba de fallos).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.3.1-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.3.0-release.apk`, `releases/SurcoGPS-v1.2.0-release.apk`,
-  `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.3.2 (actual)**: [`releases/SurcoGPS-v1.3.2-release.apk`](releases/SurcoGPS-v1.3.2-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.3.2: fix del cierre + píldora con HTTP).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.3.2-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.3.1-release.apk`, `releases/SurcoGPS-v1.3.0-release.apk`,
+  `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
+  `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).

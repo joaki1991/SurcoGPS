@@ -153,3 +153,6 @@
 
 ## 2026-10-14 - SPRINT-27 PASS
 - NPE drawable nulo corregido (causa del cierre, informe del propietario) + HTTP en pildora. App 49/49.
+
+## 2026-10-14 - SPRINT-28 PASS - FASE 6 TERMINADA (v1.3.2)
+- Suites forzadas 70/70 + 49/49. Release v1.3.2 firmada en releases/. Pendiente: pildora completa del propietario.
