@@ -22,7 +22,10 @@ data class Ajustes(
     val puertaPrecisionM: Float = 10f,
     /** Ancla de la guía (null = sin fijar). */
     val anclaLat: Double? = null,
-    val anclaLon: Double? = null
+    val anclaLon: Double? = null,
+    /** Punto final B que define el rumbo (null = sin definir). */
+    val finLat: Double? = null,
+    val finLon: Double? = null
 )
 
 /** Repositorio de ajustes con validación de rangos del dominio. */
@@ -37,6 +40,8 @@ class AjustesRepository(private val context: Context) {
         val PUERTA = floatPreferencesKey("puerta_precision_m")
         val ANCLA_LAT = doublePreferencesKey("ancla_lat")
         val ANCLA_LON = doublePreferencesKey("ancla_lon")
+        val FIN_LAT = doublePreferencesKey("fin_lat")
+        val FIN_LON = doublePreferencesKey("fin_lon")
         val TRACKING = booleanPreferencesKey("tracking_activo")
         val SESION_ACTIVA = stringPreferencesKey("sesion_activa_id")
     }
@@ -64,7 +69,9 @@ class AjustesRepository(private val context: Context) {
             offsetLongitudinalM = p[Keys.OFF_LON] ?: 0.0,
             puertaPrecisionM = p[Keys.PUERTA] ?: 10f,
             anclaLat = if (p.contains(Keys.ANCLA_LAT)) p[Keys.ANCLA_LAT] else null,
-            anclaLon = if (p.contains(Keys.ANCLA_LON)) p[Keys.ANCLA_LON] else null
+            anclaLon = if (p.contains(Keys.ANCLA_LON)) p[Keys.ANCLA_LON] else null,
+            finLat = if (p.contains(Keys.FIN_LAT)) p[Keys.FIN_LAT] else null,
+            finLon = if (p.contains(Keys.FIN_LON)) p[Keys.FIN_LON] else null
         )
     }
 
@@ -108,6 +115,21 @@ class AjustesRepository(private val context: Context) {
         context.dataStore.edit {
             it.remove(Keys.ANCLA_LAT)
             it.remove(Keys.ANCLA_LON)
+        }
+    }
+
+    suspend fun guardarPuntoFin(lat: Double, lon: Double) {
+        require(lat in -90.0..90.0 && lon in -180.0..180.0) { "punto inválido" }
+        context.dataStore.edit {
+            it[Keys.FIN_LAT] = lat
+            it[Keys.FIN_LON] = lon
+        }
+    }
+
+    suspend fun borrarPuntoFin() {
+        context.dataStore.edit {
+            it.remove(Keys.FIN_LAT)
+            it.remove(Keys.FIN_LON)
         }
     }
 }

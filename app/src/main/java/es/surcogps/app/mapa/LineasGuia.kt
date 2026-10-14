@@ -7,8 +7,8 @@ import es.surcogps.core.LatLon
 /** Caja geográfica visible (grados sexagesimales). */
 data class BBox(val norte: Double, val sur: Double, val este: Double, val oeste: Double)
 
-/** Guía visible en el mapa: familia de paralelas + línea activa resaltada. */
-data class EstadoGuia(val engine: GuidanceEngine, val lineaActiva: Int?)
+/** Guía visible en el mapa: familia de paralelas + línea activa + punto final. */
+data class EstadoGuia(val engine: GuidanceEngine, val lineaActiva: Int?, val puntoFin: LatLon?)
 
 /**
  * Índices de líneas paralelas que cubren la caja visible (±1 de margen).

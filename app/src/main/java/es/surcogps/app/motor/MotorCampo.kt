@@ -42,6 +42,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
+/** Resultado de tocar el mapa para definir ancla/rumbo. */
+enum class ResultadoToque { ANCLA_FIJADA, RUMBO_FIJADO, IGNORADO }
+
 /**
  * Motor de campo en ámbito de aplicación: sobrevive a la actividad (pantalla
  * apagada, navegación entre pestañas). El servicio en primer plano lo mantiene
@@ -219,14 +222,37 @@ class MotorCampo(private val app: Application) {
 
     fun fijarAnclaAqui() {
         val p = guiado.value.posicionApero ?: guiado.value.fix?.position ?: return
-        alcance.launch { repo.guardarAncla(p.lat, p.lon) }
+        autoAnclaHecha = true
+        alcance.launch {
+            repo.guardarAncla(p.lat, p.lon)
+            repo.borrarPuntoFin()
+        }
     }
 
     /** Fija el ancla en un punto elegido en el mapa (long-press). */
     fun fijarAnclaEn(p: LatLon) {
         if (p.lat !in -90.0..90.0 || p.lon !in -180.0..180.0) return
         autoAnclaHecha = true
-        alcance.launch { repo.guardarAncla(p.lat, p.lon) }
+        alcance.launch {
+            repo.guardarAncla(p.lat, p.lon)
+            repo.borrarPuntoFin() // El ancla nueva invalida el fin anterior.
+        }
+    }
+
+    /** Punto tocado en casa: sin ancla → la fija; con ancla → define el rumbo. */
+    suspend fun fijarPuntoMapa(p: LatLon): ResultadoToque {
+        if (p.lat !in -90.0..90.0 || p.lon !in -180.0..180.0) return ResultadoToque.IGNORADO
+        val a = ajustes.value
+        if (a.anclaLat == null || a.anclaLon == null) {
+            repo.guardarAncla(p.lat, p.lon)
+            autoAnclaHecha = true
+            return ResultadoToque.ANCLA_FIJADA
+        }
+        val rumbo = es.surcogps.app.mapa.rumboDesdeToque(LatLon(a.anclaLat, a.anclaLon), p)
+            ?: return ResultadoToque.IGNORADO
+        repo.guardarRumbo(rumbo)
+        repo.guardarPuntoFin(p.lat, p.lon)
+        return ResultadoToque.RUMBO_FIJADO
     }
 
     /** Guía actual para dibujar las paralelas (null = sin ancla). */

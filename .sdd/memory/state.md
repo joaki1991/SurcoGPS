@@ -165,3 +165,6 @@
 
 ## 2026-10-14 - SPRINT-31 PASS
 - Diagnostico ralentizacion (sliders por tick + invalidate por tick) + plan 32-34. Rotacion verificada por javap.
+
+## 2026-10-14 - SPRINT-32 PASS
+- Rumbo A+B desde casa + sliders al soltar + firma de dibujado + boton Iniciar. App 56/56.

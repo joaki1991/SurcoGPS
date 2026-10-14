@@ -113,6 +113,23 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     fun alternarRegistro() = motor.alternarRegistro()
     fun fijarAnclaAqui() = motor.fijarAnclaAqui()
     fun fijarAnclaEn(p: es.surcogps.core.LatLon) = motor.fijarAnclaEn(p)
+    /** Toque en casa: ancla o rumbo. Con aviso (Toast) del resultado. */
+    fun fijarPuntoMapa(p: es.surcogps.core.LatLon) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val ctx = getApplication<Application>().applicationContext
+            val msg = when (motor.fijarPuntoMapa(p)) {
+                es.surcogps.app.motor.ResultadoToque.ANCLA_FIJADA -> "Ancla fijada: toca otro punto para el rumbo"
+                es.surcogps.app.motor.ResultadoToque.RUMBO_FIJADO -> {
+                    val a = motor.ajustes.value
+                    "Rumbo ${"%.0f".format(a.rumboDeg)}° fijado"
+                }
+                es.surcogps.app.motor.ResultadoToque.IGNORADO -> "Demasiado cerca del ancla"
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     fun guardarRumbo(r: Double) = motor.guardarRumbo(r)
     fun guardarAncho(a: Double) = motor.guardarAncho(a)
     fun guardarShift(s: Double) = motor.guardarShift(s)

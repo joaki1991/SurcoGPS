@@ -75,6 +75,7 @@ private class EstadoMapaAplicado {
     var ultimoModo: ModoMapa? = null
     var ultimoCentro: LatLon? = null
     var moviendoProgramatico = false
+    var firmaDibujo: Int? = null
 }
 
 /**
@@ -253,11 +254,24 @@ fun MapaCampo(
                     redibujar = true
                 }
                 if (!seguir) aplicado.ultimoCentro = null
-                    // 4. Capas de datos (nunca tocan fuentes ni teselas).
+                    // 4. Capas de datos (nunca tocan fuentes ni teselas). La firma
+                    // evita redibujar ante re-emisiones idénticas (ticks de slider).
+                    val eg = guia?.engine
+                    val firma = firmaDibujo(
+                        tramos.size,
+                        eg?.anchor,
+                        eg?.headingDeg ?: 0.0,
+                        eg?.implementWidthM ?: 0.0,
+                        eg?.lateralShiftM ?: 0.0,
+                        guia?.lineaActiva,
+                        guia?.puntoFin,
+                        ubicacion
+                    )
                     franja.actualizar(tramos)
                     punto.actualizar(ubicacion)
-                    lineas.actualizar(guia?.engine, guia?.lineaActiva)
-                    if (redibujar || tramos.isNotEmpty() || ubicacion != null || guia != null) {
+                    lineas.actualizar(guia)
+                    if (redibujar || firma != aplicado.firmaDibujo) {
+                        aplicado.firmaDibujo = firma
                         mv.invalidate()
                     }
             }

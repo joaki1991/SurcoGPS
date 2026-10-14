@@ -38,3 +38,28 @@ fun textoCola(cola: Long, httpOk: Boolean?): String {
     }
     return if (cola < 0) "Teselas … · $http" else "Cola: $cola · $http"
 }
+
+/**
+ * Rumbo del segmento ancla→punto para definir la dirección de arado desde casa.
+ * Null si están demasiado cerca (< 1 m): no hay dirección fiable.
+ */
+fun rumboDesdeToque(ancla: LatLon, punto: LatLon): Double? {
+    if (GeoMath.haversine(ancla, punto) < 1.0) return null
+    return GeoMath.initialBearing(ancla, punto)
+}
+
+/**
+ * Firma del estado dibujado: solo cambia si cambia algo visible. Evita
+ * `invalidate()` (redibujado completo) ante re-emisiones idénticas, como los
+ * ticks de un slider antes de soltar.
+ */
+fun firmaDibujo(
+    nTramos: Int,
+    ancla: LatLon?,
+    rumbo: Double,
+    ancho: Double,
+    shift: Double,
+    linea: Int?,
+    fin: LatLon?,
+    ubi: EstadoUbicacion?
+): Int = listOf(nTramos, ancla, rumbo, ancho, shift, linea, fin, ubi).hashCode()

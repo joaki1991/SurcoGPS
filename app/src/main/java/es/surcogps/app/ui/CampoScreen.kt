@@ -20,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import es.surcogps.app.mapa.MapaCampo
@@ -70,8 +73,18 @@ fun CampoScreen(vm: CampoViewModel) {
             alGestoManual = vm::alGestoManual,
             tramos = tramos,
             ubicacion = ubicacion,
-            guia = guiaMotor?.let { es.surcogps.app.mapa.EstadoGuia(it, g.linea) },
-            alFijarAncla = vm::fijarAnclaEn,
+            guia = guiaMotor?.let { gm ->
+                val fLat = a.finLat
+                val fLon = a.finLon
+                es.surcogps.app.mapa.EstadoGuia(
+                    gm,
+                    g.linea,
+                    if (fLat != null && fLon != null) {
+                        es.surcogps.core.LatLon(fLat, fLon)
+                    } else null
+                )
+            },
+            alFijarAncla = vm::fijarPuntoMapa,
             puedeIrAUbicacion = g.posicionApero != null,
             alIrAUbicacion = vm::irAUbicacion
         )
@@ -134,13 +147,16 @@ fun CampoScreen(vm: CampoViewModel) {
                 enabled = g.posicionApero != null,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(if (registrando) "Pausar" else "Registrar")
+                Text(if (registrando) "Pausar" else "Iniciar")
             }
         }
-        Text("Ancho del apero: ${"%.1f".format(a.anchoAperoM)} m")
+        // El ancho se edita en local y se guarda al soltar (sin tormenta de disco).
+        var anchoUi by remember(a.anchoAperoM) { mutableStateOf(a.anchoAperoM.toFloat()) }
+        Text("Ancho del apero: ${"%.1f".format(anchoUi)} m")
         Slider(
-            value = a.anchoAperoM.toFloat(),
-            onValueChange = { vm.guardarAncho(it.toDouble()) },
+            value = anchoUi,
+            onValueChange = { anchoUi = it },
+            onValueChangeFinished = { vm.guardarAncho(anchoUi.toDouble()) },
             valueRange = 0.5f..30f,
             steps = 58
         )

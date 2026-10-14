@@ -4,7 +4,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Point
 import android.view.MotionEvent
-import android.widget.Toast
 import es.surcogps.core.GuidanceEngine
 import es.surcogps.core.LatLon
 import org.osmdroid.util.GeoPoint
@@ -13,15 +12,14 @@ import org.osmdroid.views.overlay.Overlay
 
 /**
  * Capa única de líneas guía: familia de paralelas del ancho del apero sobre la
- * vista visible, línea activa resaltada y marcador del ancla. Además, una
- * pulsación LARGA fija el ancla en el punto tocado (con aviso).
+ * vista visible, línea activa resaltada, marcador del ancla (rojo) y del punto
+ * final B (azul). La pulsación LARGA la gestiona el llamador ([alFijarAncla]).
  */
 class LineasOverlay(
     private val alFijarAncla: (LatLon) -> Unit
 ) : Overlay() {
 
-    private var guia: GuidanceEngine? = null
-    private var lineaActiva: Int? = null
+    private var guia: EstadoGuia? = null
 
     private val pLinea = Paint().apply {
         color = 0xFFFFFFFF.toInt()
@@ -49,14 +47,21 @@ class LineasOverlay(
         isAntiAlias = true
     }
 
-    fun actualizar(g: GuidanceEngine?, activa: Int?) {
+    private val pFin = Paint().apply {
+        color = 0xFF1A73E8.toInt()
+        style = Paint.Style.FILL
+        isAntiAlias = true
+    }
+
+    fun actualizar(g: EstadoGuia?) {
         guia = g
-        lineaActiva = activa
     }
 
     override fun draw(canvas: Canvas, mapView: MapView, shadow: Boolean) {
-        val g = guia ?: return
+        val estado = guia ?: return
         if (shadow) return
+        val g = estado.engine
+        val lineaActiva = estado.lineaActiva
         val bb = mapView.boundingBox
         val bbox = BBox(bb.latNorth, bb.latSouth, bb.lonEast, bb.lonWest)
         val (a0, a1) = rangoAlong(g, bbox)
@@ -74,12 +79,17 @@ class LineasOverlay(
         val c = proj.toPixels(GeoPoint(g.anchor.lat, g.anchor.lon), Point())
         canvas.drawCircle(c.x.toFloat(), c.y.toFloat(), 14f, pAnclaBorde)
         canvas.drawCircle(c.x.toFloat(), c.y.toFloat(), 10f, pAncla)
+        // Marcador del punto final B (define el rumbo).
+        estado.puntoFin?.let { fin ->
+            val f = proj.toPixels(GeoPoint(fin.lat, fin.lon), Point())
+            canvas.drawCircle(f.x.toFloat(), f.y.toFloat(), 13f, pAnclaBorde)
+            canvas.drawCircle(f.x.toFloat(), f.y.toFloat(), 9f, pFin)
+        }
     }
 
     override fun onLongPress(e: MotionEvent, mapView: MapView): Boolean {
         val gp = mapView.projection.fromPixels(e.x.toInt(), e.y.toInt()) as GeoPoint
         alFijarAncla(LatLon(gp.latitude, gp.longitude))
-        Toast.makeText(mapView.context, "Ancla fijada aquí", Toast.LENGTH_SHORT).show()
         return true
     }
 }

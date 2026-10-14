@@ -25,11 +25,21 @@ fun AjustesScreen(vm: CampoViewModel) {
         Text("Ajustes", style = MaterialTheme.typography.headlineSmall)
 
         Text("Rumbo de trabajo: ${"%.0f".format(a.rumboDeg)}° (0=N, 90=E, 180=S, 270=O)")
-        Slider(value = a.rumboDeg.toFloat(), onValueChange = { vm.guardarRumbo(it.toDouble()) },
+        Text(
+            "Se define en Campo: ancla + punto final (toque largo). Aquí solo ajuste fino.",
+            style = MaterialTheme.typography.bodySmall
+        )
+        var rumboUi by remember(a.rumboDeg) { mutableStateOf(a.rumboDeg.toFloat()) }
+        Slider(value = rumboUi,
+            onValueChange = { rumboUi = it },
+            onValueChangeFinished = { vm.guardarRumbo(rumboUi.toDouble()) },
             valueRange = 0f..359f, steps = 358)
 
         Text("Ancho del apero: ${"%.1f".format(a.anchoAperoM)} m")
-        Slider(value = a.anchoAperoM.toFloat(), onValueChange = { vm.guardarAncho(it.toDouble()) },
+        var anchoUi by remember(a.anchoAperoM) { mutableStateOf(a.anchoAperoM.toFloat()) }
+        Slider(value = anchoUi,
+            onValueChange = { anchoUi = it },
+            onValueChangeFinished = { vm.guardarAncho(anchoUi.toDouble()) },
             valueRange = 0.5f..30f, steps = 58)
 
         var shiftTxt by remember(a.desplazamientoLateralM) {
