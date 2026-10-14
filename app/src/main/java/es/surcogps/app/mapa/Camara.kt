@@ -28,3 +28,13 @@ object PoliticaCamara {
         return GeoMath.haversine(prev, nuevo) > UMBRAL_SEGUIR_M
     }
 }
+
+/** Texto de la píldora de teselas («Cola: 3 · HTTP ok»). Lógica pura, testeable. */
+fun textoCola(cola: Long, httpOk: Boolean?): String {
+    val http = when (httpOk) {
+        null -> "HTTP…"
+        true -> "HTTP ok"
+        false -> "HTTP fallo"
+    }
+    return if (cola < 0) "Teselas … · $http" else "Cola: $cola · $http"
+}

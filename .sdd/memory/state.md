@@ -156,3 +156,6 @@
 
 ## 2026-10-14 - SPRINT-28 PASS - FASE 6 TERMINADA (v1.3.2)
 - Suites forzadas 70/70 + 49/49. Release v1.3.2 firmada en releases/. Pendiente: pildora completa del propietario.
+
+## 2026-10-14 - SPRINT-29 PASS
+- Reversion a proveedor estandar + hilos/cola acotados + pildora de cola + tests locales. App 53/53.

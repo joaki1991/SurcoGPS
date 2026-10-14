@@ -67,6 +67,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 26 | QA + v1.3.1 en releases/ | QA | 25 | ✅ PASS |
 | 27 | Fix NPE drawable nulo + HTTP en píldora | Estabilidad | — | ✅ PASS |
 | 28 | QA + v1.3.2 en releases/ | QA | 27 | ✅ PASS |
+| 29 | Reversión a proveedor estándar + tests locales | Mapa | — | ✅ PASS |
+| 30 | QA + v1.4.0 en releases/ | QA | 29 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -150,6 +152,12 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-28 — QA + v1.3.2
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.3.2-release.apk`
   verificado, informe.
+### SPRINT-29 — Reversión + tests locales
+- Aceptación: proveedor estándar, hilos/cola acotados, píldora de cola,
+  servidor HTTP local en tests, suite verde.
+### SPRINT-30 — QA + v1.4.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.4.0-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -159,6 +167,7 @@ Fase 3 (mapa): 18 → 19 → 20.
 Fase 4 (teselas + líneas): 21 → 22 · 21 → 23 · 22 + 23 → 24.
 Fase 5 (cierre v1.3.0): 25 → 26.
 Fase 6 (fix NPE): 27 → 28.
+Fase 7 (reversión mapa): 29 → 30.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.

@@ -34,14 +34,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import es.surcogps.app.cobertura.TramoFranja
-import es.surcogps.app.soporte.CrashReporter
 import es.surcogps.core.LatLon
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.MapTileProviderArray
+import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -121,15 +123,16 @@ fun MapaCampo(
     val gestoActual by rememberUpdatedState(alGestoManual)
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
     val srcEsri = remember { FuentesMapa.esriImagery() }
-    var statsBase by remember { mutableStateOf(StatsTeselas()) }
-    var statsRef by remember { mutableStateOf(StatsTeselas()) }
-    val vigilanteBase = remember { VigilanteTeselas(context.applicationContext) { statsBase = it } }
-    val vigilanteRef = remember {
-        VigilanteTeselas(context.applicationContext) { statsRef = it }.apply {
-            tileSource = FuentesMapa.esriReference()
-        }
+    // Cola de teselas pendientes (sondeo 1×/s; sin recomposición por tesela).
+    var colaTeselas by remember { mutableStateOf(0L) }
+    val overlayRef = remember {
+        TilesOverlay(
+            MapTileProviderBasic(context.applicationContext).apply {
+                tileSource = FuentesMapa.esriReference()
+            },
+            context
+        )
     }
-    val overlayRef = remember { TilesOverlay(vigilanteRef, context) }
     // Diagnóstico de red hacia Esri (una comprobación por cambio de modo).
     var estadoRed by remember(modo) {
         mutableStateOf<EstadoRed?>(
@@ -156,21 +159,13 @@ fun MapaCampo(
         // User-agent con contacto, como exige la Tile Usage Policy de OSM.
         Configuration.getInstance().userAgentValue =
             "SurcoGPS/1.2 (https://github.com/joaki1991/SurcoGPS)"
-        // Proveedor vigilado; si su construcción fallara, mapa estándar para
-        // no tumbar el arranque (el fallo queda anotado en el informe).
-        val base = try {
-            MapView(context, vigilanteBase)
-        } catch (e: Exception) {
-            try {
-                CrashReporter.nota(
-                    context.applicationContext.filesDir,
-                    "Arranque degradado: proveedor vigilado no disponible: $e"
-                )
-            } catch (_: Exception) {
-            }
-            MapView(context)
-        }
-        base.apply {
+        // Descargas amables: menos hilos y cola acotada evitan avalanchas de
+        // reintentos que calientan el móvil cuando el servidor limita.
+        Configuration.getInstance().tileDownloadThreads = 4.toShort()
+        Configuration.getInstance().tileDownloadMaxQueueSize = 40.toShort()
+        // Proveedor interno estándar (reversión Sprint 29: el personalizado
+        // rompía la descarga y tumbaba el hilo downloader).
+        MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             setBuiltInZoomControls(false)
@@ -198,6 +193,15 @@ fun MapaCampo(
             mapView.onDetach()
         }
     }
+    // Sondeo de la cola de teselas (1×/s): si drena, el mapa carga; si no,
+    // es red/servidor. Sin esto es imposible saberlo en el dispositivo.
+    LaunchedEffect(Unit) {
+        while (true) {
+            val prov = mapView.tileProvider
+            colaTeselas = if (prov is MapTileProviderArray) prov.queueSize else -1L
+            delay(1_000)
+        }
+    }
 
     val sinRed = !hayRed(context)
     val aviso = if (sinRed) "Sin conexión: se muestra la caché de teselas"
@@ -222,8 +226,6 @@ fun MapaCampo(
                         mv.overlays.add(0, overlayRef)
                     }
                     aplicado.ultimoModo = modo
-                    vigilanteBase.reiniciar()
-                    vigilanteRef.reiniciar()
                 }
                 var redibujar = false
                 // 2. Comando de cámara de un solo uso.
@@ -301,19 +303,14 @@ fun MapaCampo(
                     )
                 }
             }
-            // Contadores reales del proveedor (diagnóstico en pantalla).
-            val suma = StatsTeselas(
-                statsBase.ok + statsRef.ok,
-                statsBase.fallos + statsRef.fallos,
-                statsBase.caducadas + statsRef.caducadas
-            )
+            // Contador honesto del proveedor estándar (cola pendiente).
             Surface(
                 tonalElevation = 2.dp,
                 shape = MaterialTheme.shapes.small,
                 modifier = Modifier.alpha(0.94f)
             ) {
                 Text(
-                    textoTeselas(suma, httpOk),
+                    textoCola(colaTeselas, httpOk),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
