@@ -21,6 +21,13 @@ data class EstadoUbicacion(
 )
 
 /**
+ * Ángulo de la flecha en PANTALLA: rumbo de marcha menos orientación del mapa.
+ * Con el mapa girado, el norte ya no está arriba y hay que compensarlo.
+ */
+fun anguloFlecha(rumboMarchaDeg: Double, orientacionMapaDeg: Double): Float =
+    (((rumboMarchaDeg - orientacionMapaDeg) % 360 + 360) % 360).toFloat()
+
+/**
  * Indicador de ubicación estilo navegación (capa única, creada una vez):
  * cono de precisión + punto azul con halo + flecha de rumbo de marcha.
  * Supone mapa con el norte arriba (no se rota el mapa en la app).
@@ -29,6 +36,7 @@ data class EstadoUbicacion(
 class UbicacionOverlay : Overlay() {
 
     private var estado: EstadoUbicacion? = null
+    private var orientacionMapa = 0f
 
     private val pPrecisionRelleno = Paint().apply {
         color = 0xFF2196F3.toInt()
@@ -65,8 +73,9 @@ class UbicacionOverlay : Overlay() {
         isAntiAlias = true
     }
 
-    fun actualizar(e: EstadoUbicacion?) {
+    fun actualizar(e: EstadoUbicacion?, orientacionMapaDeg: Float = 0f) {
         estado = e
+        orientacionMapa = orientacionMapaDeg
     }
 
     override fun draw(canvas: Canvas, mapView: MapView, shadow: Boolean) {
@@ -83,10 +92,13 @@ class UbicacionOverlay : Overlay() {
         val radioPx = (e.precisionM * pxPorM).toFloat().coerceAtLeast(4f)
         canvas.drawCircle(centro.x.toFloat(), centro.y.toFloat(), radioPx, pPrecisionRelleno)
         canvas.drawCircle(centro.x.toFloat(), centro.y.toFloat(), radioPx, pPrecisionBorde)
-        // Flecha de rumbo (solo con marcha fiable).
+        // Flecha de rumbo (solo con marcha fiable), compensada por el giro del mapa.
         e.rumboDeg?.let { rumbo ->
             canvas.save()
-            canvas.rotate(rumbo.toFloat(), centro.x.toFloat(), centro.y.toFloat())
+            canvas.rotate(
+                anguloFlecha(rumbo, orientacionMapa.toDouble()),
+                centro.x.toFloat(), centro.y.toFloat()
+            )
             val path = Path()
             val h = 34f
             val w = 26f

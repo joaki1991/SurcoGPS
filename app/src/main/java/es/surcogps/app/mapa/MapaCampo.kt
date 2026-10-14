@@ -49,6 +49,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.TilesOverlay
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 
 /** Modos de mapa disponibles. */
 enum class ModoMapa { HIBRIDO, SATELITE, CALLES }
@@ -173,6 +174,8 @@ fun MapaCampo(
             controller.setZoom(6.0)
             controller.setCenter(VISTA_DEFECTO)
             // Capas persistentes (orden: referencia, franja, líneas, punto, atribución).
+            // El gesto de rotación (dos dedos) va primero para recibir toques.
+            overlays.add(RotationGestureOverlay(this))
             overlays.add(franja)
             overlays.add(lineas)
             overlays.add(punto)
@@ -257,6 +260,7 @@ fun MapaCampo(
                     // 4. Capas de datos (nunca tocan fuentes ni teselas). La firma
                     // evita redibujar ante re-emisiones idénticas (ticks de slider).
                     val eg = guia?.engine
+                    val orientacion = mv.mapOrientation
                     val firma = firmaDibujo(
                         tramos.size,
                         eg?.anchor,
@@ -265,10 +269,11 @@ fun MapaCampo(
                         eg?.lateralShiftM ?: 0.0,
                         guia?.lineaActiva,
                         guia?.puntoFin,
-                        ubicacion
+                        ubicacion,
+                        orientacion
                     )
                     franja.actualizar(tramos)
-                    punto.actualizar(ubicacion)
+                    punto.actualizar(ubicacion, orientacion)
                     lineas.actualizar(guia)
                     if (redibujar || firma != aplicado.firmaDibujo) {
                         aplicado.firmaDibujo = firma

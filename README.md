@@ -71,7 +71,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 30 | QA + v1.4.0 en releases/ | QA | 29 | ✅ PASS |
 | 31 | Diagnóstico ralentización + plan simplificación | Perf | — | 🟡 en curso |
 | 32 | Rumbo desde home (A+B) + sliders al soltar + firma de dibujado | Perf/UX | 31 | ✅ PASS |
-| 33 | Rotación del mapa + flecha corregida | Mapa | 31 | ⏳ pendiente |
+| 33 | Rotación del mapa + flecha corregida | Mapa | 31 | ✅ PASS |
 | 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.

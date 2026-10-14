@@ -168,3 +168,6 @@
 
 ## 2026-10-14 - SPRINT-32 PASS
 - Rumbo A+B desde casa + sliders al soltar + firma de dibujado + boton Iniciar. App 56/56.
+
+## 2026-10-14 - SPRINT-33 PASS
+- Rotacion con dos dedos + flecha compensada (anguloFlecha testeado). App 59/59.

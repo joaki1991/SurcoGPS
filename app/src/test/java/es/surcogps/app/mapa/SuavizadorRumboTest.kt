@@ -60,3 +60,30 @@ class SuavizadorRumboTest {
         assertEquals(270.0, s.actualizar(270.0, true)!!, 1e-9)
     }
 }
+
+class AnguloFlechaTest {
+
+    @Test
+    fun norteArribaEsIdentidad() {
+        assertEquals(90f, anguloFlecha(90.0, 0.0))
+        assertEquals(0f, anguloFlecha(0.0, 0.0))
+    }
+
+    @Test
+    fun compensaGiroDelMapa() {
+        // Marcha al este con mapa girado 90° → flecha arriba.
+        assertEquals(0f, anguloFlecha(90.0, 90.0))
+        // Marcha al norte con mapa girado 90° → flecha a la izquierda.
+        assertEquals(270f, anguloFlecha(0.0, 90.0))
+    }
+
+    @Test
+    fun siempreEnRango() {
+        for (r in 0..359 step 15) {
+            for (o in 0..359 step 15) {
+                val a = anguloFlecha(r.toDouble(), o.toDouble())
+                assertTrue("r=$r o=$o a=$a", a >= 0f && a < 360f)
+            }
+        }
+    }
+}

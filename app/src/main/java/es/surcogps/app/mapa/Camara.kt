@@ -61,5 +61,6 @@ fun firmaDibujo(
     shift: Double,
     linea: Int?,
     fin: LatLon?,
-    ubi: EstadoUbicacion?
-): Int = listOf(nTramos, ancla, rumbo, ancho, shift, linea, fin, ubi).hashCode()
+    ubi: EstadoUbicacion?,
+    orientacionMapa: Float = 0f
+): Int = listOf(nTramos, ancla, rumbo, ancho, shift, linea, fin, ubi, orientacionMapa).hashCode()
