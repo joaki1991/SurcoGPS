@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 8 TERMINADA (sprints 31-34 PASS) — entrega v1.5.0.
-> Se pide comprobación en campo (fluidez, rumbo A+B, rotación, Iniciar).
+> **Estado global:** ✅ FASE 9 TERMINADA (sprints 35-36 PASS) — entrega v1.5.1.
+> Se pide captura tras 30 s quieto (píldora `Cola` + mapa).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -74,7 +74,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 33 | Rotación del mapa + flecha corregida | Mapa | 31 | ✅ PASS |
 | 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ✅ PASS |
 | 35 | Quitar topes de descarga (vuelven valores de serie) | Mapa | — | ✅ PASS |
-| 36 | QA + v1.5.1 en releases/ | QA | 35 | ⏳ pendiente |
+| 36 | QA + v1.5.1 en releases/ | QA | 35 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -263,18 +263,19 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 32 | `04902f0` | OK |
 | 33 | `2743fcf` | OK |
 | 34 | `a236943` | OK |
+| 35 | `b2fd183` | OK |
+| 36 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.5.0 (actual)**: [`releases/SurcoGPS-v1.5.0-release.apk`](releases/SurcoGPS-v1.5.0-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.5.0: rumbo A+B desde casa, sliders sin
-  tormenta, rotación del mapa, botón Iniciar).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.5.0-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,
-  `releases/SurcoGPS-v1.3.1-release.apk`, `releases/SurcoGPS-v1.3.0-release.apk`,
-  `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
-  `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.5.1 (actual)**: [`releases/SurcoGPS-v1.5.1-release.apk`](releases/SurcoGPS-v1.5.1-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.5.1: descarga de teselas a valores de serie).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.5.1-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.5.0-release.apk`, `releases/SurcoGPS-v1.4.0-release.apk`,
+  `releases/SurcoGPS-v1.3.2-release.apk`, `releases/SurcoGPS-v1.3.1-release.apk`,
+  `releases/SurcoGPS-v1.3.0-release.apk`, `releases/SurcoGPS-v1.2.0-release.apk`,
+  `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
