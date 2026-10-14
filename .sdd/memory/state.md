@@ -174,3 +174,6 @@
 
 ## 2026-10-14 - SPRINT-34 PASS - FASE 8 TERMINADA (v1.5.0)
 - Suites forzadas 70/70 + 59/59. Release v1.5.0 firmada en releases/. Nota: fila Sprint 33 del README viajo en este commit (carrera de herramientas).
+
+## 2026-10-14 - SPRINT-35 PASS
+- Topes de descarga retirados (vuelven valores de serie). App 59/59.

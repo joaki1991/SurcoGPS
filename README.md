@@ -73,6 +73,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 32 | Rumbo desde home (A+B) + sliders al soltar + firma de dibujado | Perf/UX | 31 | ✅ PASS |
 | 33 | Rotación del mapa + flecha corregida | Mapa | 31 | ✅ PASS |
 | 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ✅ PASS |
+| 35 | Quitar topes de descarga (vuelven valores de serie) | Mapa | — | ✅ PASS |
+| 36 | QA + v1.5.1 en releases/ | QA | 35 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -173,6 +175,11 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-34 — QA + v1.5.0
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.5.0-release.apk`
   verificado, informe.
+### SPRINT-35 — Quitar topes de descarga
+- Aceptación: vuelta a valores de serie; suite verde.
+### SPRINT-36 — QA + v1.5.1
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.5.1-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -184,6 +191,7 @@ Fase 5 (cierre v1.3.0): 25 → 26.
 Fase 6 (fix NPE): 27 → 28.
 Fase 7 (reversión mapa): 29 → 30.
 Fase 8 (fluidez + rumbo home + rotación): 31 → 32 · 31 → 33 · 32 + 33 → 34.
+Fase 9 (topes de descarga): 35 → 36.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.

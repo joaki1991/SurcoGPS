@@ -161,12 +161,10 @@ fun MapaCampo(
         // User-agent con contacto, como exige la Tile Usage Policy de OSM.
         Configuration.getInstance().userAgentValue =
             "SurcoGPS/1.2 (https://github.com/joaki1991/SurcoGPS)"
-        // Descargas amables: menos hilos y cola acotada evitan avalanchas de
-        // reintentos que calientan el móvil cuando el servidor limita.
-        Configuration.getInstance().tileDownloadThreads = 4.toShort()
-        Configuration.getInstance().tileDownloadMaxQueueSize = 40.toShort()
-        // Proveedor interno estándar (reversión Sprint 29: el personalizado
-        // rompía la descarga y tumbaba el hilo downloader).
+        // Descargas con valores DE SERIE de osmdroid: los topes manuales
+        // (hilos/cola) rechazaban teselas en picos de carga y alimentaban un
+        // ciclo de reintentos que vaciaba la batería sin pintar nada (v1.4.0/1.5.0).
+        // Proveedor interno estándar (el que renderizaba al principio).
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
