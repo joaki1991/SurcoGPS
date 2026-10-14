@@ -77,6 +77,13 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     fun alGestoManual() {
         _seguirPosicion.value = false
     }
+    /** Botón «Mi ubicación»: centra en la posición actual con zoom de detalle. */
+    fun irAUbicacion() {
+        val p = motor.guiado.value.posicionApero
+            ?: motor.guiado.value.fix?.position ?: return
+        motor.solicitarDestino(p, es.surcogps.app.mapa.PoliticaEncuadre.ZOOM_DETALLE)
+        _seguirPosicion.value = true
+    }
     fun consumirDestino() {
         val d = destinoCamara.value ?: return
         motor.consumirDestino(d.id)

@@ -110,3 +110,11 @@
 - `UbicacionOverlay` (cono + punto + flecha de marcha suavizada, capa única) +
   `SuavizadorRumbo` testeado. Sin brújula (decisión documentada). App 31/31, APK OK.
 - Siguiente: SPRINT-17 (zoom auto máximo + botón ubicación + v1.1.0).
+
+## 2026-10-14 — SPRINT-17 PASS · FASE 2 TERMINADA (v1.1.0)
+- Encuadre inicial one-shot (zoom 19) + botón «Mi ubicación» + estado de carga +
+  versionCode 2. App 35/35. Release v1.1.0 (8 580 920 B) firmado y verificado en
+  `releases/`. Falsa alarma `res/BW.xml`: es el adaptive-icon con nombres
+  colapsados por AAPT2 (verificado con xmltree).
+- Pendiente de hardware: parpadeo visual, punto/flecha, encuadre e icono en
+  lanzador (guía de verificación en README §12).

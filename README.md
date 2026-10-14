@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** 🟡 FASE 2 EN CURSO (corrección y estabilización; v1.0.0 entregada 12/12 PASS).
-> Deuda explícita: prueba en hardware pendiente (sin dispositivo/VT-x en este equipo).
+> **Estado global:** ✅ FASE 2 TERMINADA (sprints 13–17 PASS) — entrega v1.1.0.
+> Deuda explícita: prueba visual en hardware pendiente (sin dispositivo/VT-x).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -55,7 +55,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 14 | Icono personalizado (fuente del propietario → mipmaps + adaptativo) | Icono | 13 | ✅ PASS |
 | 15 | Estabilidad del mapa (anti-parpadeo: fuentes/capas/cámara) | Mapa | 13 | ✅ PASS |
 | 16 | Punto azul + cono de precisión + flecha de rumbo | GPS | 13 | ✅ PASS |
-| 17 | Zoom detalle automático en primer fix + botón «Mi ubicación» + v1.1.0 | GPS | 13, 15 | ⏳ pendiente |
+| 17 | Zoom detalle automático en primer fix + botón «Mi ubicación» + v1.1.0 | GPS | 13, 15 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -161,15 +161,20 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 11 | `c02f944` | OK |
 | 12 | `e8285e2` | OK |
 | Entrega APK | `88dd177` | OK |
-| 13 | (este commit) | (con este push) |
+| 13 | `69e58d2` | OK |
+| 14 | `1d52ecc` | OK |
+| 15 | `6569728` | OK |
+| 16 | `9247579` | OK |
+| 17 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **APK listo para instalar**: [`releases/SurcoGPS-v1.0.0-release.apk`](releases/SurcoGPS-v1.0.0-release.apk)
-  (8,3 MB, firmado, `es.surcogps.app` v1). En la web de GitHub: abre la carpeta
-  `releases/`, clic en el fichero → **Download** (o botón ⬇ Raw).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.0.0-release.apk`
+- **v1.1.0 (actual)**: [`releases/SurcoGPS-v1.1.0-release.apk`](releases/SurcoGPS-v1.1.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.1.0, con icono propio + mapa estable +
+  punto azul + zoom automático). En la web de GitHub: carpeta `releases/` → clic → **Download**.
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.1.0-release.apk`
+- v1.0.0 anterior: `releases/SurcoGPS-v1.0.0-release.apk` (conservada).
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).

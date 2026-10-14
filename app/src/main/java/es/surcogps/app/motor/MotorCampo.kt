@@ -13,6 +13,8 @@ import es.surcogps.app.gps.EstadoGuiado
 import es.surcogps.app.gps.GuiadoPipeline
 import es.surcogps.app.gps.LocationTracker
 import es.surcogps.app.mapa.DestinoCamara
+import es.surcogps.app.mapa.EncuadreInicial
+import es.surcogps.app.mapa.PoliticaEncuadre
 import es.surcogps.app.servicio.TrackingService
 import es.surcogps.core.FileParcelaStore
 import es.surcogps.core.FileSessionStore
@@ -76,6 +78,7 @@ class MotorCampo(private val app: Application) {
     private val _destinoCamara = MutableStateFlow<DestinoCamara?>(null)
     val destinoCamara: StateFlow<DestinoCamara?> = _destinoCamara.asStateFlow()
     private var siguienteDestinoId = 1L
+    private val encuadre = EncuadreInicial()
 
     /** Encuadra el mapa una vez (centro + zoom opcional). */
     fun solicitarDestino(punto: LatLon, zoom: Double?) {
@@ -129,6 +132,11 @@ class MotorCampo(private val app: Application) {
         val apero = e.posicionApero ?: return
         if (!e.aceptado) return
         val a = ajustes.value
+        // Encuadre inicial: primer fix válido → centrar + zoom de detalle (una vez).
+        val fix = e.fix
+        if (fix != null && encuadre.alFix(true, fix.accuracyM, a.puertaPrecisionM)) {
+            solicitarDestino(apero, PoliticaEncuadre.ZOOM_DETALLE)
+        }
         if ((a.anclaLat == null || a.anclaLon == null) && !autoAnclaHecha) {
             autoAnclaHecha = true
             alcance.launch { repo.guardarAncla(apero.lat, apero.lon) }
@@ -158,6 +166,7 @@ class MotorCampo(private val app: Application) {
     fun iniciarGps() {
         if (!tienePermisoUbicacion()) return
         pipeline.reiniciar()
+        encuadre.reiniciar()
         tracker.iniciar()
         alcance.launch { repo.guardarTracking(true) }
         ContextCompat.startForegroundService(app, Intent(app, TrackingService::class.java))
@@ -192,6 +201,7 @@ class MotorCampo(private val app: Application) {
                 }
             }
             pipeline.reiniciar()
+            encuadre.reiniciar()
             tracker.iniciar()
         }
     }
@@ -318,6 +328,9 @@ class MotorCampo(private val app: Application) {
         _sesionActivaNombre.value = s.name
         repo.guardarSesionActivaId(id)
         pipeline.reiniciar()
+        encuadre.reiniciar()
+        // Al reanudar se muestra el trabajo guardado con zoom de detalle.
+        solicitarDestino(s.anchor, PoliticaEncuadre.ZOOM_DETALLE)
     }
 
     private suspend fun aplicarSesion(s: WorkSession) {

@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
@@ -58,9 +60,22 @@ fun CampoScreen(vm: CampoViewModel) {
             alDestinoAplicado = vm::consumirDestino,
             alGestoManual = vm::alGestoManual,
             tramos = tramos,
-            ubicacion = ubicacion
+            ubicacion = ubicacion,
+            puedeIrAUbicacion = g.posicionApero != null,
+            alIrAUbicacion = vm::irAUbicacion
         )
         // HUD del banderillero: precisión SIEMPRE visible (GPS de móvil = métrico).
+        // Estado de carga: permiso concedido pero aún sin ninguna ubicación.
+        if (g.fix == null && vm.tienePermisoUbicacion()) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 3.dp)
+                Text("Buscando GPS… el mapa se centrará solo.", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
         Text(
             if (g.fix == null) "Sin posición: concede el permiso de ubicación."
             else "Precisión ±${"%.0f".format(g.fix!!.accuracyM)} m · " +

@@ -95,7 +95,10 @@ fun MapaCampo(
     /** Franja trabajada a colorear (anchura métrica real). */
     tramos: List<TramoFranja> = emptyList(),
     /** Indicador de posición (null = sin fix; no dibuja nada). */
-    ubicacion: EstadoUbicacion? = null
+    ubicacion: EstadoUbicacion? = null,
+    /** Botón «Mi ubicación» (false = deshabilitado, sin posición). */
+    puedeIrAUbicacion: Boolean = false,
+    alIrAUbicacion: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
@@ -231,11 +234,8 @@ fun MapaCampo(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(ATRIBUCION, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
-            OutlinedButton(onClick = {
-                mapView.controller.animateTo(VISTA_DEFECTO)
-                mapView.controller.setZoom(6.0)
-            }) {
-                Text("Mi zona")
+            OutlinedButton(onClick = alIrAUbicacion, enabled = puedeIrAUbicacion) {
+                Text("Mi ubicación")
             }
         }
     }
