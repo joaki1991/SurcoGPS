@@ -52,7 +52,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 11 | Foreground service + robustez (reinicios, batería, sin red) | G | 08, 10 | ✅ PASS |
 | 12 | QA final + APKs + revisión seguridad + docs instalación | H | 06–11 | ✅ PASS |
 | 13 | Diagnóstico fase 2 + planificación (parpadeo, punto azul, icono, zoom auto) | — | — | 🟡 en curso |
-| 14 | Icono personalizado (fuente del propietario → mipmaps + adaptativo) | Icono | 13 | ⏳ pendiente |
+| 14 | Icono personalizado (fuente del propietario → mipmaps + adaptativo) | Icono | 13 | ✅ PASS |
 | 15 | Estabilidad del mapa (anti-parpadeo: fuentes/capas/cámara) | Mapa | 13 | ⏳ pendiente |
 | 16 | Punto azul + cono de precisión + flecha de rumbo | GPS | 13 | ⏳ pendiente |
 | 17 | Zoom detalle automático en primer fix + botón «Mi ubicación» + v1.1.0 | GPS | 13, 15 | ⏳ pendiente |

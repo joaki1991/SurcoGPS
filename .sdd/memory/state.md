@@ -95,3 +95,8 @@
   icono fuente localizado (`Downloads\FaviconSurcoGPS.png`, 1254×1254, verificado).
 - Rama: se sigue en `main` (la petición decía `master`, pero el repo usa `main`).
 - Siguiente: SPRINT-14 (icono personalizado).
+
+## 2026-10-14 — SPRINT-14 PASS
+- Icono propio integrado (fuente 1254px verificada → 5 mipmaps + foreground 432 +
+  adaptativos + manifest). Badging confirma icono y etiqueta. assembleDebug OK.
+- Siguiente: SPRINT-15 (estabilidad del mapa).
