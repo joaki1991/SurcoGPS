@@ -39,6 +39,7 @@ fun CampoScreen(vm: CampoViewModel) {
     val ha by vm.areaHa.collectAsState()
     val tramos by vm.tramosDibujo.collectAsState()
     val registrando by vm.registrando.collectAsState()
+    val informe by vm.informeCierre.collectAsState()
 
     val permisoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -51,6 +52,13 @@ fun CampoScreen(vm: CampoViewModel) {
     }
 
     Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        informe?.let {
+            AvisoCierre(
+                texto = it,
+                alCompartir = vm::descartarCierres,
+                alDescartar = vm::descartarCierres
+            )
+        }
         MapaCampo(
             modo = modo,
             alCambiarModo = vm::cambiarModoMapa,

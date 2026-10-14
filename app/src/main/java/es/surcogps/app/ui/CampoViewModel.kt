@@ -11,6 +11,7 @@ import es.surcogps.app.mapa.DestinoCamara
 import es.surcogps.app.mapa.EstadoUbicacion
 import es.surcogps.app.mapa.ModoMapa
 import es.surcogps.app.mapa.SuavizadorRumbo
+import es.surcogps.app.soporte.CrashReporter
 import es.surcogps.core.GuidanceEngine
 import es.surcogps.core.Parcela
 import es.surcogps.core.SessionSummary
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * Fachada de UI sobre el [es.surcogps.app.motor.MotorCampo] (ámbito de app).
@@ -65,6 +67,24 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _seguirPosicion = MutableStateFlow(false)
     val seguirPosicion: StateFlow<Boolean> = _seguirPosicion.asStateFlow()
+
+    // Informe del último cierre inesperado (si existe), para compartirlo.
+    private val _informeCierre = MutableStateFlow<String?>(null)
+    val informeCierre: StateFlow<String?> = _informeCierre.asStateFlow()
+
+    init {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val ultimo = CrashReporter.listar(getApplication<Application>().filesDir).firstOrNull()
+            if (ultimo != null) _informeCierre.value = CrashReporter.leer(ultimo)
+        }
+    }
+
+    fun descartarCierres() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            CrashReporter.borrarTodos(getApplication<Application>().filesDir)
+        }
+        _informeCierre.value = null
+    }
 
     fun tienePermisoUbicacion(): Boolean = motor.tienePermisoUbicacion()
     fun iniciarGps() = motor.iniciarGps()

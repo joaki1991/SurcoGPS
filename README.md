@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 4 TERMINADA (sprints 21–24 PASS) — entrega v1.3.0.
-> Se pide captura con cifras de la píldora + líneas guía.
+> **Estado global:** 🟡 FASE 5 EN CURSO (cierre en v1.3.0; v1.3.0 entregada).
+> Se pide el informe de cierre desde la app o `adb logcat`.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -63,6 +63,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 22 | VigilanteTeselas (ok/fallo) + píldora + UA + clipToBounds | Mapa | 21 | ✅ PASS |
 | 23 | Líneas guía en mapa + ancla por toque + marcador | Guía | 21 | ✅ PASS |
 | 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ✅ PASS |
+| 25 | Informe de cierre en app + arranque a prueba de fallos | Estabilidad | — | ✅ PASS |
+| 26 | QA + v1.3.1 en releases/ | QA | 25 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -135,6 +137,12 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-24 — QA + v1.3.0
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.3.0-release.apk`
   verificado, informe.
+### SPRINT-25 — Informe de cierre + arranque seguro
+- Aceptación: cierre con traza compartible desde la app; fallback a mapa
+  estándar anotado; suite verde.
+### SPRINT-26 — QA + v1.3.1
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.3.1-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -142,6 +150,7 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 Fase 2: 13 → 14 · 13 → 15 → 17 · 13 → 16.
 Fase 3 (mapa): 18 → 19 → 20.
 Fase 4 (teselas + líneas): 21 → 22 · 21 → 23 · 22 + 23 → 24.
+Fase 5 (cierre v1.3.0): 25 → 26.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.

@@ -144,3 +144,6 @@
 
 ## 2026-10-14 - SPRINT-24 PASS - FASE 4 TERMINADA (v1.3.0)
 - Suites forzadas 70/70 + 45/45. Release v1.3.0 firmada en releases/. Se pide captura (pildora, lineas, clip).
+
+## 2026-10-14 - SPRINT-25 PASS
+- CrashReporter + AvisoCierre con compartir + fallback MapView. App 49/49. Siguiente: SPRINT-26 (QA + v1.3.1).

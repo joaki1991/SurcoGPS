@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import es.surcogps.app.cobertura.TramoFranja
+import es.surcogps.app.soporte.CrashReporter
 import es.surcogps.core.LatLon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -153,7 +154,21 @@ fun MapaCampo(
         // User-agent con contacto, como exige la Tile Usage Policy de OSM.
         Configuration.getInstance().userAgentValue =
             "SurcoGPS/1.2 (https://github.com/joaki1991/SurcoGPS)"
-        MapView(context, vigilanteBase).apply {
+        // Proveedor vigilado; si su construcción fallara, mapa estándar para
+        // no tumbar el arranque (el fallo queda anotado en el informe).
+        val base = try {
+            MapView(context, vigilanteBase)
+        } catch (e: Exception) {
+            try {
+                CrashReporter.nota(
+                    context.applicationContext.filesDir,
+                    "Arranque degradado: proveedor vigilado no disponible: $e"
+                )
+            } catch (_: Exception) {
+            }
+            MapView(context)
+        }
+        base.apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             setBuiltInZoomControls(false)
