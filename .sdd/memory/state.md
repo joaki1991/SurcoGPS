@@ -141,3 +141,6 @@
 
 ## 2026-10-14 - SPRINT-23 PASS
 - LineasOverlay (paralelas + activa + ancla + long-press con Toast). App 45/45. Siguiente: SPRINT-24 (QA + v1.3.0).
+
+## 2026-10-14 - SPRINT-24 PASS - FASE 4 TERMINADA (v1.3.0)
+- Suites forzadas 70/70 + 45/45. Release v1.3.0 firmada en releases/. Se pide captura (pildora, lineas, clip).

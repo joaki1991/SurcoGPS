@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** 🟡 FASE 4 EN CURSO (teselas + líneas guía; v1.2.0 entregada).
-> Se pide captura con cifras de la píldora tras v1.3.0.
+> **Estado global:** ✅ FASE 4 TERMINADA (sprints 21–24 PASS) — entrega v1.3.0.
+> Se pide captura con cifras de la píldora + líneas guía.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -62,7 +62,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 21 | Diagnóstico captura 2 (teselas, sangrado, líneas) + plan 22–24 | Mapa | — | 🟡 en curso |
 | 22 | VigilanteTeselas (ok/fallo) + píldora + UA + clipToBounds | Mapa | 21 | ✅ PASS |
 | 23 | Líneas guía en mapa + ancla por toque + marcador | Guía | 21 | ✅ PASS |
-| 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ⏳ pendiente |
+| 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -199,17 +199,20 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 18 | `906b445` | OK |
 | 19 | `c5c5d68` | OK |
 | 20 | `4251705` | OK |
-| 21 | (este commit) | (con este push) |
+| 21 | `dde1854` | OK |
+| 22 | `437741d` | OK |
+| 23 | `3add192` | OK |
+| 24 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.2.0 (actual)**: [`releases/SurcoGPS-v1.2.0-release.apk`](releases/SurcoGPS-v1.2.0-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.2.0: cuadro de mapa rediseñado con
-  controles dentro, diagnóstico de satélite, punto azul). En la web de GitHub:
-  carpeta `releases/` → clic → **Download**.
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.2.0-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.3.0 (actual)**: [`releases/SurcoGPS-v1.3.0-release.apk`](releases/SurcoGPS-v1.3.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.3.0: píldora con cifras de teselas,
+  mapa sin sangrado, líneas guía + ancla por toque).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.3.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
+  `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
