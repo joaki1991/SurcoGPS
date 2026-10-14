@@ -1,10 +1,8 @@
 package es.surcogps.app.mapa
 
-import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.MapTileIndex
-import android.content.Context
 
 /**
  * Fuentes de teselas autorizadas (sin API key, coste 0 € en uso normal).
@@ -43,13 +41,6 @@ object FuentesMapa {
                 return "$ESRI_REFERENCE/$z/$y/$x"
             }
         }
-
-    /** Proveedor dedicado para la capa de referencia transparente. */
-    fun referenceOverlayProvider(context: Context): MapTileProviderBasic {
-        val provider = MapTileProviderBasic(context.applicationContext)
-        provider.tileSource = esriReference()
-        return provider
-    }
 
     /** URL de una tesela de muestra (península, z10) para el diagnóstico de red. */
     fun urlMuestraEsri(): String =

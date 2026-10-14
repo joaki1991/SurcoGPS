@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -113,12 +114,15 @@ fun MapaCampo(
     val gestoActual by rememberUpdatedState(alGestoManual)
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
     val srcEsri = remember { FuentesMapa.esriImagery() }
-    val overlayRef = remember {
-        TilesOverlay(
-            FuentesMapa.referenceOverlayProvider(context.applicationContext),
-            context
-        )
+    var statsBase by remember { mutableStateOf(StatsTeselas()) }
+    var statsRef by remember { mutableStateOf(StatsTeselas()) }
+    val vigilanteBase = remember { VigilanteTeselas(context.applicationContext) { statsBase = it } }
+    val vigilanteRef = remember {
+        VigilanteTeselas(context.applicationContext) { statsRef = it }.apply {
+            tileSource = FuentesMapa.esriReference()
+        }
     }
+    val overlayRef = remember { TilesOverlay(vigilanteRef, context) }
     // Diagnóstico de red hacia Esri (una comprobación por cambio de modo).
     var estadoRed by remember(modo) {
         mutableStateOf<EstadoRed?>(
@@ -140,9 +144,10 @@ fun MapaCampo(
             context.applicationContext,
             context.applicationContext.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
         )
-        // User-agent obligatorio por la Tile Usage Policy de OSM.
-        Configuration.getInstance().userAgentValue = "SurcoGPS/1.0"
-        MapView(context).apply {
+        // User-agent con contacto, como exige la Tile Usage Policy de OSM.
+        Configuration.getInstance().userAgentValue =
+            "SurcoGPS/1.2 (https://github.com/joaki1991/SurcoGPS)"
+        MapView(context, vigilanteBase).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             setBuiltInZoomControls(false)
@@ -177,7 +182,9 @@ fun MapaCampo(
     Box(modifier) {
         AndroidView(
             factory = { mapView },
-            modifier = Modifier.fillMaxSize(),
+            // clipToBounds: el MapView pinta teselas fuera de su cuadro al
+            // desplazar; sin recorte sangra sobre el menú inferior.
+            modifier = Modifier.fillMaxSize().clipToBounds(),
             update = { mv ->
                 // 1. Fuentes y capas SOLO al cambiar de modo.
                 if (modo != aplicado.ultimoModo) {
@@ -191,6 +198,8 @@ fun MapaCampo(
                         mv.overlays.add(0, overlayRef)
                     }
                     aplicado.ultimoModo = modo
+                    vigilanteBase.reiniciar()
+                    vigilanteRef.reiniciar()
                 }
                 var redibujar = false
                 // 2. Comando de cámara de un solo uso.
@@ -264,6 +273,23 @@ fun MapaCampo(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
+            }
+            // Contadores reales del proveedor (diagnóstico en pantalla).
+            val suma = StatsTeselas(
+                statsBase.ok + statsRef.ok,
+                statsBase.fallos + statsRef.fallos,
+                statsBase.caducadas + statsRef.caducadas
+            )
+            Surface(
+                tonalElevation = 2.dp,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.alpha(0.94f)
+            ) {
+                Text(
+                    textoTeselas(suma),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
             }
         }
         Column(
