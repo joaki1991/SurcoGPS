@@ -105,3 +105,8 @@
 - Fuentes/capas solo al cambiar de modo; cámara por comandos + umbral 2 m;
   gesto manual desactiva seguir. Tests app 24/24; assembleDebug OK.
 - Siguiente: SPRINT-16 (punto azul + precisión + rumbo).
+
+## 2026-10-14 — SPRINT-16 PASS
+- `UbicacionOverlay` (cono + punto + flecha de marcha suavizada, capa única) +
+  `SuavizadorRumbo` testeado. Sin brújula (decisión documentada). App 31/31, APK OK.
+- Siguiente: SPRINT-17 (zoom auto máximo + botón ubicación + v1.1.0).

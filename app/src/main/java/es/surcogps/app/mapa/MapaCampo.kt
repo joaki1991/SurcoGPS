@@ -93,10 +93,13 @@ fun MapaCampo(
     alDestinoAplicado: () -> Unit = {},
     alGestoManual: () -> Unit = {},
     /** Franja trabajada a colorear (anchura métrica real). */
-    tramos: List<TramoFranja> = emptyList()
+    tramos: List<TramoFranja> = emptyList(),
+    /** Indicador de posición (null = sin fix; no dibuja nada). */
+    ubicacion: EstadoUbicacion? = null
 ) {
     val context = LocalContext.current
     val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
+    val punto = remember { UbicacionOverlay() }
     val aplicado = remember { EstadoMapaAplicado() }
     val gestoActual by rememberUpdatedState(alGestoManual)
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
@@ -120,6 +123,8 @@ fun MapaCampo(
             controller.setCenter(VISTA_DEFECTO)
             // La franja trabajada vive en una única capa (eficiente).
             if (!overlays.contains(franja)) overlays.add(franja)
+            // El indicador de posición también es capa única (no se duplica).
+            if (!overlays.contains(punto)) overlays.add(punto)
             addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
                     // El desplazamiento programático no cuenta como gesto.
@@ -206,7 +211,9 @@ fun MapaCampo(
                     if (!seguir) aplicado.ultimoCentro = null
                     // 4. Franja (capa única; sin tocar fuentes ni teselas).
                     franja.actualizar(tramos)
-                    if (redibujar || tramos.isNotEmpty()) mv.invalidate()
+                    // 5. Indicador de posición (capa única; null = ocultar).
+                    punto.actualizar(ubicacion)
+                    if (redibujar || tramos.isNotEmpty() || ubicacion != null) mv.invalidate()
                 }
             )
             if (!hayRed(context)) {

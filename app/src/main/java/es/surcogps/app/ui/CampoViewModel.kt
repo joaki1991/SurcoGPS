@@ -2,18 +2,24 @@ package es.surcogps.app.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import es.surcogps.app.SurcoApp
 import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.app.data.Ajustes
 import es.surcogps.app.gps.EstadoGuiado
 import es.surcogps.app.mapa.DestinoCamara
+import es.surcogps.app.mapa.EstadoUbicacion
 import es.surcogps.app.mapa.ModoMapa
+import es.surcogps.app.mapa.SuavizadorRumbo
 import es.surcogps.core.Parcela
 import es.surcogps.core.SessionSummary
 import es.surcogps.core.WorkSession
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 /**
  * Fachada de UI sobre el [es.surcogps.app.motor.MotorCampo] (ámbito de app).
@@ -34,6 +40,22 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     val sesionActivaId: StateFlow<String?> = motor.sesionActivaId
     val sesionActivaNombre: StateFlow<String?> = motor.sesionActivaNombre
     val destinoCamara: StateFlow<DestinoCamara?> = motor.destinoCamara
+
+    // Suavizado del rumbo de marcha para la flecha (con estado entre fixes).
+    private val suavizador = SuavizadorRumbo()
+
+    /** Indicador de posición para el mapa (null = sin fix). */
+    val ubicacion: StateFlow<EstadoUbicacion?> = motor.guiado.map { g ->
+        val fix = g.fix ?: return@map null
+        if (!g.aceptado) return@map null
+        val enMarcha = (fix.speedMps ?: 0f) > UMBRAL_MARCHA_MS
+        EstadoUbicacion(
+            lat = fix.position.lat,
+            lon = fix.position.lon,
+            precisionM = fix.accuracyM,
+            rumboDeg = suavizador.actualizar(g.rumboVehiculoDeg, enMarcha)
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Estado puramente visual (no pertenece al motor).
     private val _modoMapa = MutableStateFlow(ModoMapa.HIBRIDO)
@@ -75,6 +97,11 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     fun guardarSesionActiva(terminada: Boolean = false) = motor.guardarSesionActiva(terminada)
     fun terminarSesion() = motor.terminarSesion()
     fun borrarSesion(id: String) = motor.borrarSesion(id)
+
+    companion object {
+        /** Velocidad mínima para considerar marcha fiable (m/s). */
+        const val UMBRAL_MARCHA_MS = 0.8f
+    }
 
     override fun onCleared() {
         // El tracking lo posee el motor+servicio: aquí solo se persiste la foto.
