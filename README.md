@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 3 TERMINADA (sprints 18–20 PASS) — entrega v1.2.0.
-> Se pide captura de confirmación en dispositivo (chips, teselas, píldora).
+> **Estado global:** 🟡 FASE 4 EN CURSO (teselas + líneas guía; v1.2.0 entregada).
+> Se pide captura con cifras de la píldora tras v1.3.0.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -59,6 +59,10 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 18 | Diagnóstico con captura + diseño mapa estilo Traccar | Mapa | — | 🟡 en curso |
 | 19 | Nuevo componente MapaSurco (cuadro fijo, overlays persistentes, diagnóstico) | Mapa | 18 | ✅ PASS |
 | 20 | QA + v1.2.0 en releases/ | QA | 19 | ✅ PASS |
+| 21 | Diagnóstico captura 2 (teselas, sangrado, líneas) + plan 22–24 | Mapa | — | 🟡 en curso |
+| 22 | VigilanteTeselas (ok/fallo) + píldora + UA + clipToBounds | Mapa | 21 | ⏳ pendiente |
+| 23 | Líneas guía en mapa + ancla por toque + marcador | Guía | 21 | ⏳ pendiente |
+| 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -119,12 +123,25 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-20 — QA + v1.2.0
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.2.0-release.apk`
   verificado (aapt/apksigner), informe.
+### SPRINT-21 — Diagnóstico fase 4
+- Aceptación: causas de teselas vacías/sangrado/falta de líneas analizadas con
+  evidencia (curl + javap) + plan 22–24 publicado.
+### SPRINT-22 — Teselas con diagnóstico
+- Aceptación: contadores ok/fallo por proveedor en la píldora; UA con contacto;
+  `clipToBounds` (sin sangrado); suite verde.
+### SPRINT-23 — Líneas guía
+- Aceptación: paralelas del ancho dibujadas + activa resaltada + ancla visible;
+  long-press fija ancla; suite verde.
+### SPRINT-24 — QA + v1.3.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.3.0-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
 01 → 06 → 07 → 08 → 09 → 10 → 11 → 12 · 04 alimenta 08 · 05 alimenta 10.
 Fase 2: 13 → 14 · 13 → 15 → 17 · 13 → 16.
 Fase 3 (mapa): 18 → 19 → 20.
+Fase 4 (teselas + líneas): 21 → 22 · 21 → 23 · 22 + 23 → 24.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -181,7 +198,8 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 17 | `6f84a2b` | OK |
 | 18 | `906b445` | OK |
 | 19 | `c5c5d68` | OK |
-| 20 | (este commit) | (con este push) |
+| 20 | `4251705` | OK |
+| 21 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
