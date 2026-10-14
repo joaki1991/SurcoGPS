@@ -254,7 +254,7 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 31 | `091e438` | OK |
 | 32 | `04902f0` | OK |
 | 33 | `2743fcf` | OK |
-| 34 | (este commit) | (con este push) |
+| 34 | `a236943` | OK |
 
 ## 12. Instalación y uso (v1.0.0)
 
