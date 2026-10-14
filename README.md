@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 7 TERMINADA (sprints 29-30 PASS) — entrega v1.4.0.
-> Se pide captura (píldora `Cola` + mapa + líneas).
+> **Estado global:** ✅ FASE 8 TERMINADA (sprints 31-34 PASS) — entrega v1.5.0.
+> Se pide comprobación en campo (fluidez, rumbo A+B, rotación, Iniciar).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -69,10 +69,10 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 28 | QA + v1.3.2 en releases/ | QA | 27 | ✅ PASS |
 | 29 | Reversión a proveedor estándar + tests locales | Mapa | — | ✅ PASS |
 | 30 | QA + v1.4.0 en releases/ | QA | 29 | ✅ PASS |
-| 31 | Diagnóstico ralentización + plan simplificación | Perf | — | 🟡 en curso |
+| 31 | Diagnóstico ralentización + plan simplificación | Perf | — | ✅ PASS |
 | 32 | Rumbo desde home (A+B) + sliders al soltar + firma de dibujado | Perf/UX | 31 | ✅ PASS |
 | 33 | Rotación del mapa + flecha corregida | Mapa | 31 | ✅ PASS |
-| 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ⏳ pendiente |
+| 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -251,17 +251,22 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 28 | `a121cf0` | OK |
 | 29 | `ff64341` | OK |
 | 30 | `a99d2cd` | OK |
-| 31 | (este commit) | (con este push) |
+| 31 | `091e438` | OK |
+| 32 | `04902f0` | OK |
+| 33 | `2743fcf` | OK |
+| 34 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.4.0 (actual)**: [`releases/SurcoGPS-v1.4.0-release.apk`](releases/SurcoGPS-v1.4.0-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.4.0: proveedor estándar + píldora de cola + líneas guía).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.4.0-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.3.2-release.apk`, `releases/SurcoGPS-v1.3.1-release.apk`,
-  `releases/SurcoGPS-v1.3.0-release.apk`, `releases/SurcoGPS-v1.2.0-release.apk`,
-  `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.5.0 (actual)**: [`releases/SurcoGPS-v1.5.0-release.apk`](releases/SurcoGPS-v1.5.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.5.0: rumbo A+B desde casa, sliders sin
+  tormenta, rotación del mapa, botón Iniciar).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.5.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,
+  `releases/SurcoGPS-v1.3.1-release.apk`, `releases/SurcoGPS-v1.3.0-release.apk`,
+  `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
+  `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
@@ -277,16 +282,16 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 4. Sin conexión funciona lo ya visitado (caché de teselas); con red se descargan
    Mapnik (© OpenStreetMap contributors) y Esri World Imagery.
 
-### Flujo de trabajo en campo
-1. **Campo**: elige modo de mapa (Híbrido/Satélite/Calles), ajusta rumbo (0°=N,
-   90°=E, 180°=S, 270°=O) y ancho del apero.
-2. Pulsa **Fijar ancla aquí** (o se fija sola en la primera posición válida).
-3. **Sesión → Nueva sesión**; trabaja: la franja del apero se colorea en verde y
-   el HUD muestra precisión (±m, siempre visible), velocidad, línea, XTE (→/←/✓)
-   y hectáreas sin duplicar.
-4. **Pausar/Registrar** para cabeceras; **Terminar** al acabar.
-5. **Parcela → Guardar parcela actual** para reutilizar ancla+rumbo+ancho.
-6. Con pantalla apagada el tracking sigue (notificación persistente con Detener).
+### Flujo de trabajo en campo (4 pasos)
+1. **Ancla (A)**: se fija sola en la primera posición válida, o pulsa **Fijar
+   ancla aquí**, o mantén pulsado el mapa sin ancla.
+2. **Rumbo (B)**: mantén pulsado el punto final en el mapa → rumbo fijado
+   (el ajuste fino sigue en Ajustes). Ajusta el ancho del apero.
+3. **Iniciar** y trabaja siguiendo las líneas blancas (la activa, en amarillo):
+   la franja del apero se colorea en verde; el HUD muestra precisión (±m),
+   velocidad, línea, XTE (→/←/✓) y hectáreas sin duplicar.
+4. **Pausar** en cabeceras; **Sesión → Terminar** al acabar. El mapa se gira con
+   dos dedos; ◎ vuelve a tu posición.
 
 ### Reconstruir y firmar
 ```powershell
