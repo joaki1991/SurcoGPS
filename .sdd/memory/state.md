@@ -128,3 +128,7 @@
 - MapaSurco: cuadro determinista, controles dentro, CopyrightOverlay,
   diagnóstico Esri con píldora, sin auto-conmutación. App 40/40, APK OK.
   Sin cambios en CampoScreen. Siguiente: SPRINT-20 (QA + v1.2.0).
+
+## 2026-10-14 — SPRINT-20 PASS · FASE 3 TERMINADA (v1.2.0)
+- Suites forzadas: core 70/70 + app 40/40. Release v1.2.0 (8 597 308 B) firmada y
+  verificada en `releases/`. Se pide captura de confirmación (chips, teselas, píldora).
