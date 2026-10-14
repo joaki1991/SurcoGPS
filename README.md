@@ -59,7 +59,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 18 | Diagnóstico con captura + diseño mapa estilo Traccar | Mapa | — | 🟡 en curso |
 | 19 | Nuevo componente MapaSurco (cuadro fijo, overlays persistentes, diagnóstico) | Mapa | 18 | ✅ PASS |
 | 20 | QA + v1.2.0 en releases/ | QA | 19 | ✅ PASS |
-| 21 | Diagnóstico captura 2 (teselas, sangrado, líneas) + plan 22–24 | Mapa | — | 🟡 en curso |
+| 21 | Diagnóstico captura 2 (teselas, sangrado, líneas) + plan 22–24 | Mapa | — | ✅ PASS |
 | 22 | VigilanteTeselas (ok/fallo) + píldora + UA + clipToBounds | Mapa | 21 | ✅ PASS |
 | 23 | Líneas guía en mapa + ancla por toque + marcador | Guía | 21 | ✅ PASS |
 | 24 | QA + v1.3.0 en releases/ | QA | 22, 23 | ✅ PASS |
@@ -69,6 +69,10 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 28 | QA + v1.3.2 en releases/ | QA | 27 | ✅ PASS |
 | 29 | Reversión a proveedor estándar + tests locales | Mapa | — | ✅ PASS |
 | 30 | QA + v1.4.0 en releases/ | QA | 29 | ✅ PASS |
+| 31 | Diagnóstico ralentización + plan simplificación | Perf | — | 🟡 en curso |
+| 32 | Rumbo desde home (A+B) + sliders al soltar + firma de dibujado | Perf/UX | 31 | ⏳ pendiente |
+| 33 | Rotación del mapa + flecha corregida | Mapa | 31 | ⏳ pendiente |
+| 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -158,6 +162,17 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-30 — QA + v1.4.0
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.4.0-release.apk`
   verificado, informe.
+### SPRINT-31 — Diagnóstico ralentización + simplificación
+- Aceptación: causas (sliders por tick, invalidate por tick) identificadas +
+  plan 32–34 publicado.
+### SPRINT-32 — Rumbo home + rendimiento
+- Aceptación: long-press fija B y rumbo; sliders persisten al soltar;
+  invalidate solo con cambios; suite verde.
+### SPRINT-33 — Rotación
+- Aceptación: gesto de rotación + flecha corregida por orientación; suite verde.
+### SPRINT-34 — QA + v1.5.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.5.0-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -168,6 +183,7 @@ Fase 4 (teselas + líneas): 21 → 22 · 21 → 23 · 22 + 23 → 24.
 Fase 5 (cierre v1.3.0): 25 → 26.
 Fase 6 (fix NPE): 27 → 28.
 Fase 7 (reversión mapa): 29 → 30.
+Fase 8 (fluidez + rumbo home + rotación): 31 → 32 · 31 → 33 · 32 + 33 → 34.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -234,7 +250,8 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 27 | `a13b8e6` | OK |
 | 28 | `a121cf0` | OK |
 | 29 | `ff64341` | OK |
-| 30 | (este commit) | (con este push) |
+| 30 | `a99d2cd` | OK |
+| 31 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 

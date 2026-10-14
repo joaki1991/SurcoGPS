@@ -162,3 +162,6 @@
 
 ## 2026-10-14 - SPRINT-30 PASS - FASE 7 TERMINADA (v1.4.0)
 - Suites forzadas 70/70 + 53/53. Release v1.4.0 firmada en releases/. Pendiente: captura (Cola + mapa + lineas).
+
+## 2026-10-14 - SPRINT-31 PASS
+- Diagnostico ralentizacion (sliders por tick + invalidate por tick) + plan 32-34. Rotacion verificada por javap.
