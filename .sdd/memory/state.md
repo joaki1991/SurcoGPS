@@ -118,3 +118,8 @@
   colapsados por AAPT2 (verificado con xmltree).
 - Pendiente de hardware: parpadeo visual, punto/flecha, encuadre e icono en
   lanzador (guía de verificación en README §12).
+
+## 2026-10-14 — FASE 3. SPRINT-18 PASS
+- Captura real analizada (teselas vacías, chips ausentes, zoom centrado).
+  Patrón Traccar investigado en código (WebView único + APIs estrechas).
+  Diseño MapaSurco publicado. Siguiente: SPRINT-19 (implementación).

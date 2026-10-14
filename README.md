@@ -1,6 +1,6 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 2 TERMINADA (sprints 13–17 PASS) — entrega v1.1.0.
+> **Estado global:** 🟡 FASE 3 EN CURSO (mapa con captura real; v1.1.0 entregada).
 > Deuda explícita: prueba visual en hardware pendiente (sin dispositivo/VT-x).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
@@ -56,6 +56,9 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 15 | Estabilidad del mapa (anti-parpadeo: fuentes/capas/cámara) | Mapa | 13 | ✅ PASS |
 | 16 | Punto azul + cono de precisión + flecha de rumbo | GPS | 13 | ✅ PASS |
 | 17 | Zoom detalle automático en primer fix + botón «Mi ubicación» + v1.1.0 | GPS | 13, 15 | ✅ PASS |
+| 18 | Diagnóstico con captura + diseño mapa estilo Traccar | Mapa | — | 🟡 en curso |
+| 19 | Nuevo componente MapaSurco (cuadro fijo, overlays persistentes, diagnóstico) | Mapa | 18 | ⏳ pendiente |
+| 20 | QA + v1.2.0 en releases/ | QA | 19 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -107,11 +110,21 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 - Aceptación: primer fix válido centra + zoom 19 (una vez); gestos manuales
   respetados; botón «Mi ubicación» reencuadra; `releases/SurcoGPS-v1.1.0-release.apk`
   verificado.
+### SPRINT-18 — Diagnóstico fase 3
+- Aceptación: síntomas de la captura analizados + patrón Traccar investigado en
+  código + diseño del nuevo componente publicado.
+### SPRINT-19 — MapaSurco
+- Aceptación: cuadro de mapa determinista con controles dentro; overlays
+  persistentes; diagnóstico de teselas con aviso; sin recreaciones por fix.
+### SPRINT-20 — QA + v1.2.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.2.0-release.apk`
+  verificado (aapt/apksigner), informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
 01 → 06 → 07 → 08 → 09 → 10 → 11 → 12 · 04 alimenta 08 · 05 alimenta 10.
 Fase 2: 13 → 14 · 13 → 15 → 17 · 13 → 16.
+Fase 3 (mapa): 18 → 19 → 20.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -166,6 +179,7 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 15 | `6569728` | OK |
 | 16 | `9247579` | OK |
 | 17 | (este commit) | (con este push) |
+| 18 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
