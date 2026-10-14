@@ -3,28 +3,39 @@ package es.surcogps.app.mapa
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.core.LatLon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -32,15 +43,16 @@ import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.TilesOverlay
 
 /** Modos de mapa disponibles. */
 enum class ModoMapa { HIBRIDO, SATELITE, CALLES }
 
-/** Atribución obligatoria de las fuentes (siempre visible bajo el mapa). */
+/** Atribución obligatoria de las fuentes (también en el CopyrightOverlay). */
 const val ATRIBUCION = "© OpenStreetMap contributors · Imagery © Esri World Imagery"
 
-/** Vista por defecto: península ibérica (se centra en el ancla en el Sprint 08). */
+/** Vista por defecto: península ibérica (hasta el primer fix válido). */
 val VISTA_DEFECTO = GeoPoint(40.5, -3.8)
 
 /** Hay red disponible (para el aviso de modo sin conexión). */
@@ -52,15 +64,8 @@ fun hayRed(context: Context): Boolean {
 }
 
 /**
- * Mapa híbrido OSMDroid embebido en Compose.
- * - HÍBRIDO: Esri satélite + referencia transparente (límites/topónimos).
- * - SATÉLITE: solo Esri. - CALLES: OSM Mapnik.
- * La caché de teselas de OSMDroid permite ver lo ya visitado sin conexión.
- */
-/**
  * Estado aplicado al MapView (sobrevive a recomposiciones; no es estado Compose).
- * Existe para NO tocar fuentes, capas ni cámara salvo que algo haya cambiado:
- * esa era la causa del parpadeo (ver SPRINT-13).
+ * El mapa se configura UNA vez (estilo Traccar); los updates solo tocan lo que cambia.
  */
 private class EstadoMapaAplicado {
     var ultimoModo: ModoMapa? = null
@@ -69,15 +74,16 @@ private class EstadoMapaAplicado {
 }
 
 /**
- * Mapa híbrido OSMDroid embebido en Compose.
- * - HÍBRIDO: Esri satélite + referencia transparente (límites/topónimos).
- * - SATÉLITE: solo Esri. - CALLES: OSM Mapnik.
- * La caché de teselas de OSMDroid permite ver lo ya visitado sin conexión.
+ * Cuadro de mapa determinista: el MapView ocupa todo el cuadro (`fillMaxSize`
+ * dentro de un `Box` con altura por peso, sin pesos anidados) y los controles
+ * (modos, estado, zoom, ubicación) flotan ENCIMA del mapa, siempre visibles.
  *
- * Estabilidad: la fuente y las capas solo se aplican al cambiar de [modo]; la
- * cámara solo se mueve por [destino] (un solo uso) o por [seguir] con
- * desplazamiento real; un gesto manual de desplazamiento desactiva el
- * seguimiento ([alGestoManual]).
+ * - HÍBRIDO: Esri satélite + referencia transparente. SATÉLITE: solo Esri.
+ *   CALLES: OSM Mapnik. Fuentes y capas creadas una vez; se aplican al cambiar
+ *   de modo, nunca por fix GPS.
+ * - Cámara solo por comando ([destino], un uso) o [seguir] con umbral; el gesto
+ *   manual de desplazamiento desactiva el seguimiento ([alGestoManual]).
+ * - Atribución: `CopyrightOverlay` dentro del mapa.
  */
 @Composable
 fun MapaCampo(
@@ -108,8 +114,26 @@ fun MapaCampo(
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
     val srcEsri = remember { FuentesMapa.esriImagery() }
     val overlayRef = remember {
-        val prov = FuentesMapa.referenceOverlayProvider(context.applicationContext)
-        TilesOverlay(prov, context)
+        TilesOverlay(
+            FuentesMapa.referenceOverlayProvider(context.applicationContext),
+            context
+        )
+    }
+    // Diagnóstico de red hacia Esri (una comprobación por cambio de modo).
+    var estadoRed by remember(modo) {
+        mutableStateOf<EstadoRed?>(
+            if (configPara(modo).base == BaseFuente.ESRI) EstadoRed.COMPROBANDO else null
+        )
+    }
+    LaunchedEffect(modo) {
+        if (configPara(modo).base == BaseFuente.ESRI) {
+            val ok = withContext(Dispatchers.IO) {
+                DiagnosticoTeselas.comprobar(FuentesMapa.urlMuestraEsri())
+            }
+            estadoRed = if (ok) EstadoRed.OK else EstadoRed.FALLO
+        } else {
+            estadoRed = null
+        }
     }
     val mapView = remember {
         Configuration.getInstance().load(
@@ -121,16 +145,15 @@ fun MapaCampo(
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
-            setBuiltInZoomControls(true)
+            setBuiltInZoomControls(false)
             controller.setZoom(6.0)
             controller.setCenter(VISTA_DEFECTO)
-            // La franja trabajada vive en una única capa (eficiente).
-            if (!overlays.contains(franja)) overlays.add(franja)
-            // El indicador de posición también es capa única (no se duplica).
-            if (!overlays.contains(punto)) overlays.add(punto)
+            // Capas persistentes (orden: franja, punto, atribución encima).
+            overlays.add(franja)
+            overlays.add(punto)
+            overlays.add(CopyrightOverlay(context))
             addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
-                    // El desplazamiento programático no cuenta como gesto.
                     if (!aplicado.moviendoProgramatico) gestoActual()
                     return false
                 }
@@ -147,95 +170,129 @@ fun MapaCampo(
         }
     }
 
-    Column(modifier) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-            FilterChip(
-                selected = modo == ModoMapa.HIBRIDO,
-                onClick = { alCambiarModo(ModoMapa.HIBRIDO) },
-                label = { Text("Híbrido") },
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            FilterChip(
-                selected = modo == ModoMapa.SATELITE,
-                onClick = { alCambiarModo(ModoMapa.SATELITE) },
-                label = { Text("Satélite") },
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            FilterChip(
-                selected = modo == ModoMapa.CALLES,
-                onClick = { alCambiarModo(ModoMapa.CALLES) },
-                label = { Text("Calles") }
-            )
-        }
-        Box(Modifier.fillMaxSize().weight(1f)) {
-            AndroidView(
-                factory = { mapView },
-                modifier = Modifier.fillMaxSize(),
-                update = { mv ->
-                    // 1. Fuentes y capas SOLO al cambiar de modo (antes: en cada
-                    // fix GPS → recarga de teselas y parpadeo).
-                    if (modo != aplicado.ultimoModo) {
-                        mv.overlays.removeAll { it is TilesOverlay }
-                        val cfg = configPara(modo)
-                        mv.setTileSource(
-                            if (cfg.base == BaseFuente.ESRI) srcEsri
-                            else TileSourceFactory.MAPNIK
-                        )
-                        if (cfg.conReferencia && !mv.overlays.contains(overlayRef)) {
-                            mv.overlays.add(overlayRef)
-                        }
-                        aplicado.ultimoModo = modo
+    val sinRed = !hayRed(context)
+    val aviso = if (sinRed) "Sin conexión: se muestra la caché de teselas"
+    else resolverFuente(modo, estadoRed).aviso
+
+    Box(modifier) {
+        AndroidView(
+            factory = { mapView },
+            modifier = Modifier.fillMaxSize(),
+            update = { mv ->
+                // 1. Fuentes y capas SOLO al cambiar de modo.
+                if (modo != aplicado.ultimoModo) {
+                    mv.overlays.removeAll { it is TilesOverlay }
+                    val cfg = configPara(modo)
+                    mv.setTileSource(
+                        if (cfg.base == BaseFuente.ESRI) srcEsri
+                        else TileSourceFactory.MAPNIK
+                    )
+                    if (cfg.conReferencia && !mv.overlays.contains(overlayRef)) {
+                        mv.overlays.add(0, overlayRef)
                     }
-                    var redibujar = false
-                    // 2. Comando de cámara de un solo uso.
-                    val d = destino
-                    if (d != null) {
-                        aplicado.moviendoProgramatico = true
-                        mv.controller.setCenter(GeoPoint(d.punto.lat, d.punto.lon))
-                        d.zoom?.let {
-                            mv.controller.setZoom(
-                                it.coerceIn(mv.minZoomLevel.toDouble(), mv.maxZoomLevel.toDouble())
-                            )
-                        }
-                        aplicado.moviendoProgramatico = false
-                        aplicado.ultimoCentro = d.punto
-                        destinoActual()
-                        redibujar = true
-                    }
-                    // 3. Seguimiento con umbral (antes: setCenter en cada fix).
-                    val objetivo = posicionSeguir?.let { LatLon(it.latitude, it.longitude) }
-                    if (objetivo != null && PoliticaCamara.debeRecenter(seguir, aplicado.ultimoCentro, objetivo)) {
-                        aplicado.moviendoProgramatico = true
-                        mv.controller.setCenter(posicionSeguir)
-                        aplicado.moviendoProgramatico = false
-                        aplicado.ultimoCentro = objetivo
-                        redibujar = true
-                    }
-                    if (!seguir) aplicado.ultimoCentro = null
-                    // 4. Franja (capa única; sin tocar fuentes ni teselas).
-                    franja.actualizar(tramos)
-                    // 5. Indicador de posición (capa única; null = ocultar).
-                    punto.actualizar(ubicacion)
-                    if (redibujar || tramos.isNotEmpty() || ubicacion != null) mv.invalidate()
+                    aplicado.ultimoModo = modo
                 }
-            )
-            if (!hayRed(context)) {
-                Text(
-                    "Sin conexión: se muestra la caché de teselas",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(8.dp)
-                )
+                var redibujar = false
+                // 2. Comando de cámara de un solo uso.
+                val d = destino
+                if (d != null) {
+                    aplicado.moviendoProgramatico = true
+                    mv.controller.setCenter(GeoPoint(d.punto.lat, d.punto.lon))
+                    d.zoom?.let {
+                        mv.controller.setZoom(
+                            it.coerceIn(mv.minZoomLevel.toDouble(), mv.maxZoomLevel.toDouble())
+                        )
+                    }
+                    aplicado.moviendoProgramatico = false
+                    aplicado.ultimoCentro = d.punto
+                    destinoActual()
+                    redibujar = true
+                }
+                // 3. Seguimiento con umbral.
+                val objetivo = posicionSeguir?.let { LatLon(it.latitude, it.longitude) }
+                if (objetivo != null && PoliticaCamara.debeRecenter(seguir, aplicado.ultimoCentro, objetivo)) {
+                    aplicado.moviendoProgramatico = true
+                    mv.controller.setCenter(posicionSeguir)
+                    aplicado.moviendoProgramatico = false
+                    aplicado.ultimoCentro = objetivo
+                    redibujar = true
+                }
+                if (!seguir) aplicado.ultimoCentro = null
+                // 4. Capas de datos (nunca tocan fuentes ni teselas).
+                franja.actualizar(tramos)
+                punto.actualizar(ubicacion)
+                if (redibujar || tramos.isNotEmpty() || ubicacion != null) mv.invalidate()
+            }
+        )
+        // Controles SIEMPRE visibles, flotando sobre el mapa.
+        Column(
+            Modifier.align(Alignment.TopStart).padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Surface(
+                tonalElevation = 2.dp,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.alpha(0.94f)
+            ) {
+                Row(Modifier.padding(horizontal = 4.dp)) {
+                    FilterChip(
+                        selected = modo == ModoMapa.HIBRIDO,
+                        onClick = { alCambiarModo(ModoMapa.HIBRIDO) },
+                        label = { Text("Híbrido") }
+                    )
+                    FilterChip(
+                        selected = modo == ModoMapa.SATELITE,
+                        onClick = { alCambiarModo(ModoMapa.SATELITE) },
+                        label = { Text("Satélite") }
+                    )
+                    FilterChip(
+                        selected = modo == ModoMapa.CALLES,
+                        onClick = { alCambiarModo(ModoMapa.CALLES) },
+                        label = { Text("Calles") }
+                    )
+                }
+            }
+            aviso?.let {
+                Surface(
+                    tonalElevation = 2.dp,
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.alpha(0.94f)
+                ) {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            Modifier.align(Alignment.BottomEnd).padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.End
         ) {
-            Text(ATRIBUCION, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
-            OutlinedButton(onClick = alIrAUbicacion, enabled = puedeIrAUbicacion) {
-                Text("Mi ubicación")
+            Surface(
+                tonalElevation = 2.dp,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.alpha(0.94f)
+            ) {
+                Row {
+                    IconButton(onClick = { mapView.controller.zoomIn() }) {
+                        Icon(Icons.Filled.Add, contentDescription = "Acercar")
+                    }
+                    IconButton(onClick = { mapView.controller.zoomOut() }) {
+                        Text("−", style = MaterialTheme.typography.titleLarge)
+                    }
+                }
+            }
+            Surface(
+                tonalElevation = 2.dp,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.alpha(0.94f)
+            ) {
+                IconButton(onClick = alIrAUbicacion, enabled = puedeIrAUbicacion) {
+                    Text("◎", style = MaterialTheme.typography.titleLarge)
+                }
             }
         }
     }

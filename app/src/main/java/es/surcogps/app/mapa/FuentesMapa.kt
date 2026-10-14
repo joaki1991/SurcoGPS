@@ -50,6 +50,36 @@ object FuentesMapa {
         provider.tileSource = esriReference()
         return provider
     }
+
+    /** URL de una tesela de muestra (península, z10) para el diagnóstico de red. */
+    fun urlMuestraEsri(): String =
+        esriImagery().getTileURLString(MapTileIndex.getTileIndex(10, 500, 395))
+}
+
+/** Estado de la comprobación de red hacia el proveedor satélite. */
+enum class EstadoRed { COMPROBANDO, OK, FALLO }
+
+/** Configuración efectiva del mapa + aviso visible (lógica pura, testeable). */
+data class EstadoFuente(
+    val base: BaseFuente,
+    val conReferencia: Boolean,
+    /** Aviso para la píldora de estado (null = todo bien). */
+    val aviso: String?
+)
+
+/**
+ * Resuelve qué pintar según modo y red, sin conmutaciones mágicas: si el
+ * satélite no responde se AVISA (el usuario cambia a Calles si quiere).
+ */
+fun resolverFuente(modo: ModoMapa, esri: EstadoRed?): EstadoFuente {
+    val cfg = configPara(modo)
+    val aviso = when {
+        cfg.base != BaseFuente.ESRI -> null
+        esri == null || esri == EstadoRed.COMPROBANDO -> "Comprobando satélite…"
+        esri == EstadoRed.FALLO -> "Satélite sin conexión: revisa la red o usa Calles"
+        else -> null
+    }
+    return EstadoFuente(cfg.base, cfg.conReferencia, aviso)
 }
 
 /** Base cartográfica a usar + si necesita la capa de referencia encima. */

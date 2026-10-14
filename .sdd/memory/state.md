@@ -123,3 +123,8 @@
 - Captura real analizada (teselas vacías, chips ausentes, zoom centrado).
   Patrón Traccar investigado en código (WebView único + APIs estrechas).
   Diseño MapaSurco publicado. Siguiente: SPRINT-19 (implementación).
+
+## 2026-10-14 — SPRINT-19 PASS
+- MapaSurco: cuadro determinista, controles dentro, CopyrightOverlay,
+  diagnóstico Esri con píldora, sin auto-conmutación. App 40/40, APK OK.
+  Sin cambios en CampoScreen. Siguiente: SPRINT-20 (QA + v1.2.0).
