@@ -6,6 +6,7 @@ import es.surcogps.app.SurcoApp
 import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.app.data.Ajustes
 import es.surcogps.app.gps.EstadoGuiado
+import es.surcogps.app.mapa.DestinoCamara
 import es.surcogps.app.mapa.ModoMapa
 import es.surcogps.core.Parcela
 import es.surcogps.core.SessionSummary
@@ -32,6 +33,7 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     val sesiones: StateFlow<List<SessionSummary>> = motor.sesiones
     val sesionActivaId: StateFlow<String?> = motor.sesionActivaId
     val sesionActivaNombre: StateFlow<String?> = motor.sesionActivaNombre
+    val destinoCamara: StateFlow<DestinoCamara?> = motor.destinoCamara
 
     // Estado puramente visual (no pertenece al motor).
     private val _modoMapa = MutableStateFlow(ModoMapa.HIBRIDO)
@@ -48,6 +50,14 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun alternarSeguir() {
         _seguirPosicion.value = !_seguirPosicion.value
+    }
+    /** El usuario movió el mapa a mano: se deja de seguir (sin pelear la cámara). */
+    fun alGestoManual() {
+        _seguirPosicion.value = false
+    }
+    fun consumirDestino() {
+        val d = destinoCamara.value ?: return
+        motor.consumirDestino(d.id)
     }
     fun alternarRegistro() = motor.alternarRegistro()
     fun fijarAnclaAqui() = motor.fijarAnclaAqui()

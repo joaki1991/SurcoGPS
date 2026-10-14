@@ -30,6 +30,7 @@ fun CampoScreen(vm: CampoViewModel) {
     val modo by vm.modoMapa.collectAsState()
     val g by vm.guiado.collectAsState()
     val seguir by vm.seguirPosicion.collectAsState()
+    val destino by vm.destinoCamara.collectAsState()
     val nmea by vm.nmeaSentencias.collectAsState()
     val ha by vm.areaHa.collectAsState()
     val tramos by vm.tramosDibujo.collectAsState()
@@ -50,7 +51,11 @@ fun CampoScreen(vm: CampoViewModel) {
             modo = modo,
             alCambiarModo = vm::cambiarModoMapa,
             modifier = Modifier.fillMaxWidth().weight(1f),
+            seguir = seguir,
             posicionSeguir = if (seguir) g.posicionApero?.let { GeoPoint(it.lat, it.lon) } else null,
+            destino = destino,
+            alDestinoAplicado = vm::consumirDestino,
+            alGestoManual = vm::alGestoManual,
             tramos = tramos
         )
         // HUD del banderillero: precisión SIEMPRE visible (GPS de móvil = métrico).

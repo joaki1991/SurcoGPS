@@ -12,6 +12,7 @@ import es.surcogps.app.data.AjustesRepository
 import es.surcogps.app.gps.EstadoGuiado
 import es.surcogps.app.gps.GuiadoPipeline
 import es.surcogps.app.gps.LocationTracker
+import es.surcogps.app.mapa.DestinoCamara
 import es.surcogps.app.servicio.TrackingService
 import es.surcogps.core.FileParcelaStore
 import es.surcogps.core.FileSessionStore
@@ -70,6 +71,20 @@ class MotorCampo(private val app: Application) {
 
     private val _registrando = MutableStateFlow(true)
     val registrando: StateFlow<Boolean> = _registrando.asStateFlow()
+
+    // ---- Cámara (comandos de un solo uso; el mapa los consume) ----
+    private val _destinoCamara = MutableStateFlow<DestinoCamara?>(null)
+    val destinoCamara: StateFlow<DestinoCamara?> = _destinoCamara.asStateFlow()
+    private var siguienteDestinoId = 1L
+
+    /** Encuadra el mapa una vez (centro + zoom opcional). */
+    fun solicitarDestino(punto: LatLon, zoom: Double?) {
+        _destinoCamara.value = DestinoCamara(siguienteDestinoId++, punto, zoom)
+    }
+
+    fun consumirDestino(id: Long) {
+        if (_destinoCamara.value?.id == id) _destinoCamara.value = null
+    }
 
     // ---- Sesiones ----
     private val _parcelas = MutableStateFlow<List<Parcela>>(emptyList())

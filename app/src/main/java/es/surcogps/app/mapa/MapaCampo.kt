@@ -15,14 +15,20 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import es.surcogps.app.cobertura.TramoFranja
+import es.surcogps.core.LatLon
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -51,18 +57,54 @@ fun hayRed(context: Context): Boolean {
  * - SATÉLITE: solo Esri. - CALLES: OSM Mapnik.
  * La caché de teselas de OSMDroid permite ver lo ya visitado sin conexión.
  */
+/**
+ * Estado aplicado al MapView (sobrevive a recomposiciones; no es estado Compose).
+ * Existe para NO tocar fuentes, capas ni cámara salvo que algo haya cambiado:
+ * esa era la causa del parpadeo (ver SPRINT-13).
+ */
+private class EstadoMapaAplicado {
+    var ultimoModo: ModoMapa? = null
+    var ultimoCentro: LatLon? = null
+    var moviendoProgramatico = false
+}
+
+/**
+ * Mapa híbrido OSMDroid embebido en Compose.
+ * - HÍBRIDO: Esri satélite + referencia transparente (límites/topónimos).
+ * - SATÉLITE: solo Esri. - CALLES: OSM Mapnik.
+ * La caché de teselas de OSMDroid permite ver lo ya visitado sin conexión.
+ *
+ * Estabilidad: la fuente y las capas solo se aplican al cambiar de [modo]; la
+ * cámara solo se mueve por [destino] (un solo uso) o por [seguir] con
+ * desplazamiento real; un gesto manual de desplazamiento desactiva el
+ * seguimiento ([alGestoManual]).
+ */
 @Composable
 fun MapaCampo(
     modo: ModoMapa,
     alCambiarModo: (ModoMapa) -> Unit,
     modifier: Modifier = Modifier,
+    /** Seguimiento de la posición (con umbral; el gesto manual lo desactiva). */
+    seguir: Boolean = false,
     /** Posición a seguir (null = no seguir). */
     posicionSeguir: GeoPoint? = null,
+    /** Comando de cámara de un solo uso (null = ninguno pendiente). */
+    destino: DestinoCamara? = null,
+    alDestinoAplicado: () -> Unit = {},
+    alGestoManual: () -> Unit = {},
     /** Franja trabajada a colorear (anchura métrica real). */
     tramos: List<TramoFranja> = emptyList()
 ) {
     val context = LocalContext.current
     val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
+    val aplicado = remember { EstadoMapaAplicado() }
+    val gestoActual by rememberUpdatedState(alGestoManual)
+    val destinoActual by rememberUpdatedState(alDestinoAplicado)
+    val srcEsri = remember { FuentesMapa.esriImagery() }
+    val overlayRef = remember {
+        val prov = FuentesMapa.referenceOverlayProvider(context.applicationContext)
+        TilesOverlay(prov, context)
+    }
     val mapView = remember {
         Configuration.getInstance().load(
             context.applicationContext,
@@ -78,6 +120,15 @@ fun MapaCampo(
             controller.setCenter(VISTA_DEFECTO)
             // La franja trabajada vive en una única capa (eficiente).
             if (!overlays.contains(franja)) overlays.add(franja)
+            addMapListener(object : MapListener {
+                override fun onScroll(event: ScrollEvent?): Boolean {
+                    // El desplazamiento programático no cuenta como gesto.
+                    if (!aplicado.moviendoProgramatico) gestoActual()
+                    return false
+                }
+
+                override fun onZoom(event: ZoomEvent?): Boolean = false
+            })
         }
     }
     DisposableEffect(Unit) {
@@ -113,22 +164,49 @@ fun MapaCampo(
                 factory = { mapView },
                 modifier = Modifier.fillMaxSize(),
                 update = { mv ->
-                    // Limpia la capa de referencia si existía.
-                    mv.overlays.removeAll { it is TilesOverlay }
-                    val cfg = configPara(modo)
-                    mv.setTileSource(
-                        if (cfg.base == BaseFuente.ESRI) FuentesMapa.esriImagery()
-                        else TileSourceFactory.MAPNIK
-                    )
-                    if (cfg.conReferencia) {
-                        val prov = FuentesMapa.referenceOverlayProvider(mv.context)
-                        mv.overlays.add(TilesOverlay(prov, mv.context))
+                    // 1. Fuentes y capas SOLO al cambiar de modo (antes: en cada
+                    // fix GPS → recarga de teselas y parpadeo).
+                    if (modo != aplicado.ultimoModo) {
+                        mv.overlays.removeAll { it is TilesOverlay }
+                        val cfg = configPara(modo)
+                        mv.setTileSource(
+                            if (cfg.base == BaseFuente.ESRI) srcEsri
+                            else TileSourceFactory.MAPNIK
+                        )
+                        if (cfg.conReferencia && !mv.overlays.contains(overlayRef)) {
+                            mv.overlays.add(overlayRef)
+                        }
+                        aplicado.ultimoModo = modo
                     }
-                    if (posicionSeguir != null) {
+                    var redibujar = false
+                    // 2. Comando de cámara de un solo uso.
+                    val d = destino
+                    if (d != null) {
+                        aplicado.moviendoProgramatico = true
+                        mv.controller.setCenter(GeoPoint(d.punto.lat, d.punto.lon))
+                        d.zoom?.let {
+                            mv.controller.setZoom(
+                                it.coerceIn(mv.minZoomLevel.toDouble(), mv.maxZoomLevel.toDouble())
+                            )
+                        }
+                        aplicado.moviendoProgramatico = false
+                        aplicado.ultimoCentro = d.punto
+                        destinoActual()
+                        redibujar = true
+                    }
+                    // 3. Seguimiento con umbral (antes: setCenter en cada fix).
+                    val objetivo = posicionSeguir?.let { LatLon(it.latitude, it.longitude) }
+                    if (objetivo != null && PoliticaCamara.debeRecenter(seguir, aplicado.ultimoCentro, objetivo)) {
+                        aplicado.moviendoProgramatico = true
                         mv.controller.setCenter(posicionSeguir)
+                        aplicado.moviendoProgramatico = false
+                        aplicado.ultimoCentro = objetivo
+                        redibujar = true
                     }
+                    if (!seguir) aplicado.ultimoCentro = null
+                    // 4. Franja (capa única; sin tocar fuentes ni teselas).
                     franja.actualizar(tramos)
-                    mv.invalidate()
+                    if (redibujar || tramos.isNotEmpty()) mv.invalidate()
                 }
             )
             if (!hayRed(context)) {

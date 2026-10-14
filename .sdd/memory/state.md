@@ -100,3 +100,8 @@
 - Icono propio integrado (fuente 1254px verificada → 5 mipmaps + foreground 432 +
   adaptativos + manifest). Badging confirma icono y etiqueta. assembleDebug OK.
 - Siguiente: SPRINT-15 (estabilidad del mapa).
+
+## 2026-10-14 — SPRINT-15 PASS
+- Fuentes/capas solo al cambiar de modo; cámara por comandos + umbral 2 m;
+  gesto manual desactiva seguir. Tests app 24/24; assembleDebug OK.
+- Siguiente: SPRINT-16 (punto azul + precisión + rumbo).
