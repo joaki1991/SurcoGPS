@@ -147,3 +147,6 @@
 
 ## 2026-10-14 - SPRINT-25 PASS
 - CrashReporter + AvisoCierre con compartir + fallback MapView. App 49/49. Siguiente: SPRINT-26 (QA + v1.3.1).
+
+## 2026-10-14 - SPRINT-26 PASS - FASE 5 TERMINADA (v1.3.1)
+- Suites forzadas 70/70 + 49/49. Release v1.3.1 firmada en releases/. Pendiente: informe de cierre del propietario.
