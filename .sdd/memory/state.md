@@ -204,3 +204,6 @@
 
 ## 2026-10-15 - SPRINT-44 PASS
 - MapaRetenido en VM (una creacion por proceso) + sonda SQL honesta. App 75/75.
+
+## 2026-10-15 - SPRINT-45 PASS - FASE 10 TERMINADA (v1.7.0)
+- Suites forzadas 70/70 + 75/75. Release v1.7.0 firmada en releases/. Pendiente fisico: una creacion de MapView + sonda honesta.

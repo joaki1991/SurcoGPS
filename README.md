@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 10 TERMINADA (sprints 37-43 PASS) — entrega v1.6.2.
-> Instalar SIN borrar nada: el mapa debería pintar en segundos.
+> **Estado global:** ✅ FASE 10 TERMINADA (sprints 37-45 PASS) — entrega v1.7.0.
+> Instalar SIN borrar nada; comprobar una sola creación de MapView por proceso.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -83,7 +83,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 42 | Cache de teselas en dir garantizado | Mapa | 37 | ✅ PASS |
 | 43 | QA + v1.6.2 en releases/ | QA | 42 | ✅ PASS |
 | 44 | Mapa retenido + sonda SQL corregida | Mapa | 37 | ✅ PASS |
-| 45 | QA + v1.7.0 en releases/ | QA | 44 | ⏳ pendiente |
+| 45 | QA + v1.7.0 en releases/ | QA | 44 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -306,20 +306,22 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 40 | `6cc1bc1` | OK |
 | 41 | `e41e728` | OK |
 | 42 | `e0fc871` | OK |
-| 43 | (este commit) | (con este push) |
+| 43 | `f27809b` | OK |
+| 44 | `9ec74ab` | OK |
+| 45 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.6.2 (actual)**: [`releases/SurcoGPS-v1.6.2-release.apk`](releases/SurcoGPS-v1.6.2-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.6.2: caché de teselas en directorio garantizado).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.6.2-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.6.1-release.apk`, `releases/SurcoGPS-v1.6.0-release.apk`,
-  `releases/SurcoGPS-v1.5.1-release.apk`, `releases/SurcoGPS-v1.5.0-release.apk`,
-  `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,
-  `releases/SurcoGPS-v1.3.1-release.apk`, `releases/SurcoGPS-v1.3.0-release.apk`,
-  `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
-  `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.7.0 (actual)**: [`releases/SurcoGPS-v1.7.0-release.apk`](releases/SurcoGPS-v1.7.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.7.0: mapa retenido + sonda SQL honesta).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.7.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.6.2-release.apk`, `releases/SurcoGPS-v1.6.1-release.apk`,
+  `releases/SurcoGPS-v1.6.0-release.apk`, `releases/SurcoGPS-v1.5.1-release.apk`,
+  `releases/SurcoGPS-v1.5.0-release.apk`, `releases/SurcoGPS-v1.4.0-release.apk`,
+  `releases/SurcoGPS-v1.3.2-release.apk`, `releases/SurcoGPS-v1.3.1-release.apk`,
+  `releases/SurcoGPS-v1.3.0-release.apk`, `releases/SurcoGPS-v1.2.0-release.apk`,
+  `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
