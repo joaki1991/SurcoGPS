@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import es.surcogps.app.cobertura.TramoFranja
+import es.surcogps.app.soporte.RegistroDiag
 import es.surcogps.core.LatLon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -114,7 +115,9 @@ fun MapaCampo(
     alFijarAncla: (LatLon) -> Unit = { _ -> },
     /** Botón «Mi ubicación» (false = deshabilitado, sin posición). */
     puedeIrAUbicacion: Boolean = false,
-    alIrAUbicacion: () -> Unit = {}
+    alIrAUbicacion: () -> Unit = {},
+    /** Publica la cola de teselas (diagnóstico, 1×/s). */
+    alCola: (Long) -> Unit = {}
 ) {
     val context = LocalContext.current
     val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
@@ -125,8 +128,8 @@ fun MapaCampo(
     val gestoActual by rememberUpdatedState(alGestoManual)
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
     val srcEsri = remember { FuentesMapa.esriImagery() }
-    // Cola de teselas pendientes (sondeo 1×/s; sin recomposición por tesela).
-    var colaTeselas by remember { mutableStateOf(0L) }
+    // Cola visible en la píldora (1×/s) + publicada al VM (diagnóstico).
+    var colaVista by remember { mutableStateOf(0L) }
     val overlayRef = remember {
         TilesOverlay(
             MapTileProviderBasic(context.applicationContext).apply {
@@ -186,6 +189,9 @@ fun MapaCampo(
 
                 override fun onZoom(event: ZoomEvent?): Boolean = false
             })
+            RegistroDiag.registrar(
+                context.applicationContext.filesDir, "mapa", "MapView creado"
+            )
         }
     }
     DisposableEffect(Unit) {
@@ -197,10 +203,13 @@ fun MapaCampo(
     }
     // Sondeo de la cola de teselas (1×/s): si drena, el mapa carga; si no,
     // es red/servidor. Sin esto es imposible saberlo en el dispositivo.
+    val colaActual by rememberUpdatedState(alCola)
     LaunchedEffect(Unit) {
         while (true) {
             val prov = mapView.tileProvider
-            colaTeselas = if (prov is MapTileProviderArray) prov.queueSize else -1L
+            val n = if (prov is MapTileProviderArray) prov.queueSize else -1L
+            colaVista = n
+            colaActual(n)
             delay(1_000)
         }
     }
@@ -228,6 +237,9 @@ fun MapaCampo(
                         mv.overlays.add(0, overlayRef)
                     }
                     aplicado.ultimoModo = modo
+                    RegistroDiag.registrar(
+                        mv.context.applicationContext.filesDir, "mapa", "modo $modo aplicado"
+                    )
                 }
                 var redibujar = false
                 // 2. Comando de cámara de un solo uso.
@@ -327,7 +339,7 @@ fun MapaCampo(
                 modifier = Modifier.alpha(0.94f)
             ) {
                 Text(
-                    textoCola(colaTeselas, httpOk),
+                    textoCola(colaVista, httpOk),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )

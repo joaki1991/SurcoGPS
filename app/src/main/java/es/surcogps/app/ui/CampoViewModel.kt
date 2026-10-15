@@ -1,6 +1,11 @@
 package es.surcogps.app.ui
 
 import android.app.Application
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import es.surcogps.app.SurcoApp
@@ -8,14 +13,23 @@ import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.app.data.Ajustes
 import es.surcogps.app.gps.EstadoGuiado
 import es.surcogps.app.mapa.DestinoCamara
+import es.surcogps.app.mapa.DiagnosticoTeselas
 import es.surcogps.app.mapa.EstadoUbicacion
+import es.surcogps.app.mapa.FuentesMapa
 import es.surcogps.app.mapa.ModoMapa
 import es.surcogps.app.mapa.SuavizadorRumbo
+import es.surcogps.app.soporte.ChequeoFuente
 import es.surcogps.app.soporte.CrashReporter
+import es.surcogps.app.soporte.EstadoCache
+import es.surcogps.app.soporte.InformeDiag
+import es.surcogps.app.soporte.RegistroDiag
+import es.surcogps.app.soporte.StatsFuente
+import es.surcogps.app.soporte.zonaGruesa
 import es.surcogps.core.GuidanceEngine
 import es.surcogps.core.Parcela
 import es.surcogps.core.SessionSummary
 import es.surcogps.core.WorkSession
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +37,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.util.Counters
+import org.osmdroid.util.MapTileIndex
+import java.io.File
 
 /**
  * Fachada de UI sobre el [es.surcogps.app.motor.MotorCampo] (ámbito de app).
@@ -144,6 +164,168 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     fun guardarSesionActiva(terminada: Boolean = false) = motor.guardarSesionActiva(terminada)
     fun terminarSesion() = motor.terminarSesion()
     fun borrarSesion(id: String) = motor.borrarSesion(id)
+
+    // ---- Diagnóstico autónomo (sin ADB; no toca el mapa) ----
+
+    /** Foto del estado de diagnóstico para la pantalla. */
+    data class EstadoDiagnostico(
+        val permisoUbicacion: Boolean,
+        val gpsActivo: Boolean,
+        val ultimoFix: String?,
+        val stats: StatsFuente?,
+        val cache: EstadoCache?,
+        val eventos: List<es.surcogps.app.soporte.EventoDiag>,
+        val cierres: Int,
+        val chequeos: List<ChequeoFuente>
+    )
+
+    private val _diag = MutableStateFlow<EstadoDiagnostico?>(null)
+    val diagnostico: StateFlow<EstadoDiagnostico?> = _diag.asStateFlow()
+
+    private val _chequeos = mutableListOf<ChequeoFuente>()
+
+    private val _colaTeselas = MutableStateFlow(-1L)
+    /** Última cola de teselas publicada por el mapa (para diagnóstico). */
+    val colaTeselas: StateFlow<Long> = _colaTeselas.asStateFlow()
+
+    fun informarCola(n: Long) {
+        _colaTeselas.value = n
+    }
+
+    private fun dirDiag(): File = getApplication<Application>().filesDir
+
+    /** Lee el estado actual (permisos, GPS, contadores osmdroid, caché, registros). */
+    fun refrescarDiagnostico() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            val permiso = tienePermisoUbicacion()
+            var gps = false
+            try {
+                val lm = app.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            } catch (_: Exception) {
+            }
+            val fix = motor.guiado.value.fix
+            val ultimoFix = fix?.let {
+                val haceS = (System.currentTimeMillis() - it.timeMs) / 1000
+                "hace ${haceS}s · ±${"%.0f".format(it.accuracyM)} m · zona ${zonaGruesa(it.position.lat, it.position.lon)}"
+            }
+            val stats = try {
+                StatsFuente(
+                    Counters.tileDownloadErrors,
+                    Counters.fileCacheHit,
+                    Counters.fileCacheMiss,
+                    Counters.fileCacheSaveErrors,
+                    Counters.countOOM + Counters.fileCacheOOM,
+                    _colaTeselas.value,
+                    null
+                )
+            } catch (_: Exception) {
+                null
+            }
+            val cache = medirCache()
+            val eventos = RegistroDiag.ultimos(app.filesDir, 60)
+            val cierres = try {
+                CrashReporter.listar(app.filesDir).size
+            } catch (_: Exception) {
+                0
+            }
+            _diag.value = EstadoDiagnostico(
+                permiso, gps, ultimoFix, stats, cache, eventos, cierres,
+                _chequeos.toList()
+            )
+        }
+    }
+
+    /** Comprobación manual limitada: 3 teselas de muestra como máximo. */
+    fun ejecutarDiagnostico() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            RegistroDiag.registrar(app.filesDir, "diag", "chequeo manual iniciado")
+            val idx = MapTileIndex.getTileIndex(10, 500, 395)
+            val pruebas = listOf(
+                "Esri satélite" to FuentesMapa.esriImagery().getTileURLString(idx),
+                "Esri referencia" to FuentesMapa.esriReference().getTileURLString(idx),
+                "OSM Mapnik" to TileSourceFactory.MAPNIK.getTileURLString(
+                    MapTileIndex.getTileIndex(6, 31, 24)
+                )
+            )
+            _chequeos.clear()
+            for ((nombre, url) in pruebas) {
+                val r = DiagnosticoTeselas.comprobarDetalle(url)
+                val c = ChequeoFuente(nombre, url, r.ok, r.codigo, r.error, r.ms)
+                _chequeos.add(c)
+                RegistroDiag.registrar(
+                    app.filesDir, "diag",
+                    "$nombre: ${if (r.ok) "OK" else "FALLO"} HTTP ${r.codigo ?: "?"} ${r.ms}ms ${r.error ?: ""}"
+                )
+            }
+            RegistroDiag.registrar(app.filesDir, "diag", "chequeo manual terminado")
+            refrescarDiagnostico()
+        }
+    }
+
+    /** Genera el TXT del informe en caché (para compartir). Null si falla. */
+    suspend fun exportarInforme(): File? = withContext(Dispatchers.IO) {
+        try {
+            val app = getApplication<Application>()
+            val estado = _diag.value
+            @Suppress("DEPRECATION")
+            val pi = app.packageManager.getPackageInfo(app.packageName, 0)
+            val version = "${pi.versionName} (${pi.versionCode})"
+            val eventos = RegistroDiag.ultimos(app.filesDir, 120)
+            val textosCierres = try {
+                CrashReporter.listar(app.filesDir).take(3).map { CrashReporter.leer(it) }
+            } catch (_: Exception) {
+                emptyList()
+            }
+            val chequeos = _chequeos.toList()
+            val stats = estado?.stats
+            val cache = estado?.cache ?: medirCache()
+            val texto = InformeDiag.construir(
+                version, eventos, textosCierres, chequeos, stats, cache,
+                tienePermisoUbicacion(), estado?.gpsActivo ?: false, estado?.ultimoFix
+            )
+            val f = File(app.cacheDir, "informe-surcogps.txt")
+            f.writeText(texto, Charsets.UTF_8)
+            RegistroDiag.registrar(app.filesDir, "diag", "informe exportado (${f.length()} B)")
+            f
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /** Borra registros de diagnóstico y cierres (jamás parcelas/sesiones/ajustes). */
+    fun limpiarRegistros() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            RegistroDiag.limpiar(app.filesDir)
+            try {
+                CrashReporter.borrarTodos(app.filesDir)
+            } catch (_: Exception) {
+            }
+            _chequeos.clear()
+            refrescarDiagnostico()
+        }
+    }
+
+    private fun medirCache(): EstadoCache? {
+        return try {
+            val dir = Configuration.getInstance().osmdroidTileCache
+            if (!dir.isDirectory) return EstadoCache(0, 0)
+            var bytes = 0L
+            var n = 0
+            dir.walkTopDown().take(6000).forEach {
+                if (it.isFile) {
+                    bytes += it.length()
+                    n++
+                }
+            }
+            EstadoCache(bytes, n)
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     companion object {
         /** Velocidad mínima para considerar marcha fiable (m/s). */

@@ -85,6 +85,7 @@ fun CampoScreen(vm: CampoViewModel) {
                 )
             },
             alFijarAncla = vm::fijarPuntoMapa,
+            alCola = vm::informarCola,
             puedeIrAUbicacion = g.posicionApero != null,
             alIrAUbicacion = vm::irAUbicacion
         )

@@ -3,6 +3,7 @@ package es.surcogps.app
 import android.app.Application
 import es.surcogps.app.motor.MotorCampo
 import es.surcogps.app.soporte.CrashReporter
+import es.surcogps.app.soporte.RegistroDiag
 
 /** Aplicación: alberga el [MotorCampo] para que el tracking sobreviva a la UI. */
 class SurcoApp : Application() {
@@ -10,6 +11,7 @@ class SurcoApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        RegistroDiag.nuevaSesion(filesDir)
         // Informa cierres inesperados en fichero local (para compartir),
         // encadenando al gestor previo del sistema (cierra igual, pero con rastro).
         val anterior = Thread.getDefaultUncaughtExceptionHandler()
@@ -17,6 +19,7 @@ class SurcoApp : Application() {
         Thread.setDefaultUncaughtExceptionHandler { hilo, error ->
             try {
                 CrashReporter.guardarCierre(dir, hilo, error)
+                RegistroDiag.excepcion(dir, "fatal", error)
             } catch (_: Exception) {
                 // No hay nada más que hacer: se delega al sistema.
             }

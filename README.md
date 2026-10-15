@@ -1,7 +1,6 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** 🟡 FASE 10 EN CURSO (diagnóstico bloqueos; v1.5.1 entregada).
-> Sprint 38 bloqueado hasta recibir logs del dispositivo (ver informe SPRINT-37).
+> **Estado global:** 🟡 FASE 10 EN CURSO (diagnóstico en app; v1.5.1 entregada).
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -76,8 +75,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 35 | Quitar topes de descarga (vuelven valores de serie) | Mapa | — | ✅ PASS |
 | 36 | QA + v1.5.1 en releases/ | QA | 35 | ✅ PASS |
 | 37 | Diagnóstico bloqueos + mapa (fuentes osmdroid + protocolo) | Diag | — | 🟡 en curso |
-| 38 | Correcciones con evidencia + validación física (pendiente logs) | Mapa | 37 | ⏳ pendiente |
-| 39 | Regresión + protocolo físico + release | QA | 38 | ⏳ pendiente |
+| 38 | Diagnóstico autónomo en app (registro, pantalla, exportar) | Diag | 37 | ✅ PASS |
+| 39 | QA + v1.6.0 en releases/ | QA | 38 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -186,10 +185,12 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-37 — Diagnóstico bloqueos + mapa
 - Aceptación: fuentes osmdroid citadas, causas graduadas, protocolo logcat,
   info faltante documentada. Sin cambios de código.
-### SPRINT-38 — Correcciones con evidencia (pendiente logs del dispositivo)
-- Aceptación: solo fixes derivados de evidencia + validación física declarada.
-### SPRINT-39 — Regresión + release (pendiente validación física)
-- Aceptación: tests, protocolo físico ejecutado por el propietario, APK.
+### SPRINT-38 — Diagnóstico autónomo en app
+- Aceptación: pantalla en Ajustes, registro persistente, botón de chequeo
+  limitado, exportar TXT, suite verde.
+### SPRINT-39 — QA + v1.6.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.6.0-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘

@@ -3,8 +3,10 @@ package es.surcogps.app.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -19,7 +21,7 @@ import androidx.compose.ui.unit.dp
 
 /** Ajustes reales persistidos en DataStore (rumbo, ancho, shift, offset, puerta). */
 @Composable
-fun AjustesScreen(vm: CampoViewModel) {
+fun AjustesScreen(vm: CampoViewModel, alDiagnostico: () -> Unit = {}) {
     val a by vm.ajustes.collectAsState()
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Ajustes", style = MaterialTheme.typography.headlineSmall)
@@ -69,5 +71,8 @@ fun AjustesScreen(vm: CampoViewModel) {
         )
         Text("Brazo antena→apero: lateral ${"%.1f".format(a.offsetLateralM)} m, " +
             "longitudinal ${"%.1f".format(a.offsetLongitudinalM)} m (editable en Sprint 08).")
+        OutlinedButton(onClick = alDiagnostico, modifier = Modifier.fillMaxWidth()) {
+            Text("Abrir diagnóstico")
+        }
     }
 }

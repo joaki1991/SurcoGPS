@@ -183,3 +183,6 @@
 
 ## 2026-10-14 - SPRINT-37 PASS
 - Fuentes osmdroid leidas (NPE/thread-death confirmados, sin auto-reintento, cache blanda). Protocolo logcat listo. 38 pendiente de logs.
+
+## 2026-10-14 - SPRINT-38 PASS
+- Pantalla de diagnostico + registro persistente + exportar TXT + chequeo limitado. App 68/68.

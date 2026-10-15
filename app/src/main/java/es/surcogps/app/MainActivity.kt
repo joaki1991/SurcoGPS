@@ -23,20 +23,48 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import es.surcogps.app.soporte.RegistroDiag
 import es.surcogps.app.ui.AjustesScreen
 import es.surcogps.app.ui.CampoScreen
 import es.surcogps.app.ui.CampoViewModel
+import es.surcogps.app.ui.PantallaDiagnostico
 import es.surcogps.app.ui.ParcelaScreen
 import es.surcogps.app.ui.SesionScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onCreate")
         setContent {
             MaterialTheme {
                 SurcoGPSApp()
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onStart")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onResume")
+    }
+
+    override fun onPause() {
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onPause")
+        super.onPause()
+    }
+
+    override fun onStop() {
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onStop")
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onDestroy")
+        super.onDestroy()
     }
 }
 
@@ -78,7 +106,10 @@ fun SurcoGPSApp() {
             composable("campo") { CampoScreen(vm) }
             composable("parcela") { ParcelaScreen(vm) }
             composable("sesion") { SesionScreen(vm) }
-            composable("ajustes") { AjustesScreen(vm) }
+            composable("ajustes") {
+                AjustesScreen(vm, alDiagnostico = { nav.navigate("diagnostico") })
+            }
+            composable("diagnostico") { PantallaDiagnostico(vm) }
         }
     }
 }

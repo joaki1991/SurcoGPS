@@ -101,6 +101,19 @@ class DiagnosticoTeselasTest {
         // Conexión rechazada al instante (sin colgar el test).
         assertFalse(DiagnosticoTeselas.comprobar("http://127.0.0.1:9/tile", 2000))
     }
+
+    @Test
+    fun detalleConCodigoYDuracion() {
+        val puerto = arrancar()
+        val ok = DiagnosticoTeselas.comprobarDetalle("http://127.0.0.1:$puerto/bien")
+        assertTrue(ok.ok)
+        assertEquals(200, ok.codigo)
+        assertEquals(null, ok.error)
+        assertTrue(ok.ms >= 0)
+        val ko = DiagnosticoTeselas.comprobarDetalle("http://127.0.0.1:$puerto/roto")
+        assertFalse(ko.ok)
+        assertEquals(404, ko.codigo)
+    }
 }
 
 class TextoColaTest {
