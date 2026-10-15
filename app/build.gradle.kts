@@ -14,8 +14,8 @@ android {
         applicationId = "es.surcogps.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.5.1"
+        versionCode = 10
+        versionName = "1.6.0"
     }
 
     // Firma release con clave LOCAL (local.properties, nunca commiteada).

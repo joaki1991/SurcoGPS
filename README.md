@@ -1,6 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** 🟡 FASE 10 EN CURSO (diagnóstico en app; v1.5.1 entregada).
+> **Estado global:** ✅ FASE 10 TERMINADA (sprints 37-39 PASS) — entrega v1.6.0.
+> Pide al propietario: pantalla Diagnóstico + exportar informe.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -74,9 +75,9 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 34 | QA + v1.5.0 en releases/ | QA | 32, 33 | ✅ PASS |
 | 35 | Quitar topes de descarga (vuelven valores de serie) | Mapa | — | ✅ PASS |
 | 36 | QA + v1.5.1 en releases/ | QA | 35 | ✅ PASS |
-| 37 | Diagnóstico bloqueos + mapa (fuentes osmdroid + protocolo) | Diag | — | 🟡 en curso |
+| 37 | Diagnóstico bloqueos + mapa (fuentes osmdroid + protocolo) | Diag | — | ✅ PASS |
 | 38 | Diagnóstico autónomo en app (registro, pantalla, exportar) | Diag | 37 | ✅ PASS |
-| 39 | QA + v1.6.0 en releases/ | QA | 38 | ⏳ pendiente |
+| 39 | QA + v1.6.0 en releases/ | QA | 38 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -277,18 +278,21 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 34 | `a236943` | OK |
 | 35 | `b2fd183` | OK |
 | 36 | `c9abe2f` | OK |
-| 37 | (este commit) | (con este push) |
+| 37 | `0375373` | OK |
+| 38 | `4f4cc87` | OK |
+| 39 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.5.1 (actual)**: [`releases/SurcoGPS-v1.5.1-release.apk`](releases/SurcoGPS-v1.5.1-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.5.1: descarga de teselas a valores de serie).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.5.1-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.5.0-release.apk`, `releases/SurcoGPS-v1.4.0-release.apk`,
-  `releases/SurcoGPS-v1.3.2-release.apk`, `releases/SurcoGPS-v1.3.1-release.apk`,
-  `releases/SurcoGPS-v1.3.0-release.apk`, `releases/SurcoGPS-v1.2.0-release.apk`,
-  `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.6.0 (actual)**: [`releases/SurcoGPS-v1.6.0-release.apk`](releases/SurcoGPS-v1.6.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.6.0: diagnóstico autónomo en app).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.6.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.5.1-release.apk`, `releases/SurcoGPS-v1.5.0-release.apk`,
+  `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,
+  `releases/SurcoGPS-v1.3.1-release.apk`, `releases/SurcoGPS-v1.3.0-release.apk`,
+  `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
+  `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).

@@ -186,3 +186,6 @@
 
 ## 2026-10-14 - SPRINT-38 PASS
 - Pantalla de diagnostico + registro persistente + exportar TXT + chequeo limitado. App 68/68.
+
+## 2026-10-15 - SPRINT-39 PASS - FASE 10 TERMINADA (v1.6.0)
+- Suites forzadas 70/70 + 68/68. Release v1.6.0 firmada en releases/. Pendiente fisico: pantalla diag + exportar.
