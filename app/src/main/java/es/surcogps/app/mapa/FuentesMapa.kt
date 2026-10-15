@@ -47,6 +47,16 @@ object FuentesMapa {
         esriImagery().getTileURLString(MapTileIndex.getTileIndex(10, 500, 395))
 }
 
+/** Decisión sobre el directorio de caché de teselas. */
+enum class ModoCache { DEFECTO, INTERNA }
+
+/**
+ * Elige dónde guardar teselas: el directorio por defecto, salvo que no sea
+ * escribible (entonces, almacenamiento interno garantizado). Lógica pura.
+ */
+fun resolverDirCache(defectoEscribible: Boolean): ModoCache =
+    if (defectoEscribible) ModoCache.DEFECTO else ModoCache.INTERNA
+
 /** Estado de la comprobación de red hacia el proveedor satélite. */
 enum class EstadoRed { COMPROBANDO, OK, FALLO }
 

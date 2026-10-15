@@ -195,3 +195,6 @@
 
 ## 2026-10-15 - SPRINT-41 PASS - FASE 10 TERMINADA (v1.6.1)
 - Suites forzadas 70/70 + 72/72. Release v1.6.1 firmada en releases/. Pendiente: informe con sonda del propietario.
+
+## 2026-10-15 - SPRINT-42 PASS
+- Causa raiz confirmada por informe (guardado imposible). Cache interna si defecto falla. App 74/74.

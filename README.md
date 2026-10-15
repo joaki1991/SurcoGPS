@@ -80,6 +80,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 39 | QA + v1.6.0 en releases/ | QA | 38 | ✅ PASS |
 | 40 | Sonda de almacenamiento + informe | Diag | 37 | ✅ PASS |
 | 41 | QA + v1.6.1 en releases/ | QA | 40 | ✅ PASS |
+| 42 | Cache de teselas en dir garantizado | Mapa | 37 | ✅ PASS |
+| 43 | QA + v1.6.2 en releases/ | QA | 42 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 

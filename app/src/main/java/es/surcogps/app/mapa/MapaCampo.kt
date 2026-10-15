@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.app.soporte.RegistroDiag
+import es.surcogps.app.soporte.SondaAlmacen
 import es.surcogps.core.LatLon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -164,10 +165,23 @@ fun MapaCampo(
         // User-agent con contacto, como exige la Tile Usage Policy de OSM.
         Configuration.getInstance().userAgentValue =
             "SurcoGPS/1.2 (https://github.com/joaki1991/SurcoGPS)"
-        // Descargas con valores DE SERIE de osmdroid: los topes manuales
-        // (hilos/cola) rechazaban teselas en picos de carga y alimentaban un
-        // ciclo de reintentos que vaciaba la batería sin pintar nada (v1.4.0/1.5.0).
-        // Proveedor interno estándar (el que renderizaba al principio).
+        // Caché de teselas en directorio garantizado: en algunos dispositivos
+        // el path por defecto no es escribible (todo lo descargado se pierde y
+        // el mapa queda gris). Solo se cambia si el defecto falla de verdad.
+        val cfg = Configuration.getInstance()
+        try {
+            val defecto = cfg.osmdroidTileCache
+            val usable = defecto != null && SondaAlmacen.probarEscrituraDirecta(defecto).ok
+            if (resolverDirCache(usable) == ModoCache.INTERNA) {
+                val interna = java.io.File(context.applicationContext.cacheDir, "teselas")
+                cfg.osmdroidTileCache = interna
+                RegistroDiag.registrar(
+                    context.applicationContext.filesDir, "mapa",
+                    "cache por defecto no escribible → interna"
+                )
+            }
+        } catch (_: Exception) {
+        }
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
