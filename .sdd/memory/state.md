@@ -192,3 +192,6 @@
 
 ## 2026-10-15 - SPRINT-40 PASS
 - Sonda de almacenamiento (directa + SQL real) en diagnostico + informe. App 72/72.
+
+## 2026-10-15 - SPRINT-41 PASS - FASE 10 TERMINADA (v1.6.1)
+- Suites forzadas 70/70 + 72/72. Release v1.6.1 firmada en releases/. Pendiente: informe con sonda del propietario.
