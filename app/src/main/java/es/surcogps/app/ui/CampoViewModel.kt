@@ -16,6 +16,7 @@ import es.surcogps.app.mapa.DestinoCamara
 import es.surcogps.app.mapa.DiagnosticoTeselas
 import es.surcogps.app.mapa.EstadoUbicacion
 import es.surcogps.app.mapa.FuentesMapa
+import es.surcogps.app.mapa.MapaRetenido
 import es.surcogps.app.mapa.ModoMapa
 import es.surcogps.app.mapa.SuavizadorRumbo
 import es.surcogps.app.soporte.ChequeoFuente
@@ -52,6 +53,10 @@ import java.io.File
 class CampoViewModel(app: Application) : AndroidViewModel(app) {
 
     private val motor = (app as SurcoApp).motor
+
+    /** Mapa retenido: sobrevive a la navegación entre pestañas (sin reconstruir). */
+    private val mapaLazy = lazy { MapaRetenido(getApplication()) }
+    val mapa: MapaRetenido by mapaLazy
 
     val ajustes: StateFlow<Ajustes> = motor.ajustes
     val nmeaSentencias: StateFlow<Int> = motor.nmeaSentencias
@@ -262,10 +267,16 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
                 )
             }
             // Sonda SQL al escritor real de teselas (misma ruta que osmdroid).
-            try {
+            // Orden: borrar primero (si existía de antes, el guardado diría
+            // falso aunque todo esté sano) → guardar → comprobar → borrar.
+            _sondaSql.value = try {
                 val escritor = org.osmdroid.tileprovider.modules.SqlTileWriter()
                 val fuente = FuentesMapa.esriImagery()
                 val idx = MapTileIndex.getTileIndex(0, 0, 0)
+                try {
+                    escritor.remove(fuente, idx)
+                } catch (_: Exception) {
+                }
                 val guardado = escritor.saveFile(
                     fuente, idx, java.io.ByteArrayInputStream(byteArrayOf(1, 2, 3, 4)), 0L
                 )
@@ -278,11 +289,9 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
                     escritor.remove(fuente, idx)
                 } catch (_: Exception) {
                 }
-                _sondaSql.value =
-                    if (guardado && existe) "SQL OK (escribe+lee+borra)"
-                    else "SQL fallo (guardado=$guardado existe=$existe)"
+                es.surcogps.app.soporte.veredictoSonda(guardado, existe)
             } catch (e: Exception) {
-                _sondaSql.value = "SQL excepción: ${e.javaClass.simpleName}: ${e.message}"
+                "SQL excepción: ${e.javaClass.simpleName}: ${e.message}"
             }
             RegistroDiag.registrar(app.filesDir, "diag", "sonda SQL: ${_sondaSql.value}")
             RegistroDiag.registrar(app.filesDir, "diag", "chequeo manual terminado")
@@ -357,8 +366,13 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
-        // El tracking lo posee el motor+servicio: aquí solo se persiste la foto.
+        // El tracking lo posee el motor+servicio: aquí solo se persiste la foto
+        // y se suelta el mapa retenido (hilos de teselas incluidos).
         guardarSesionActiva()
+        try {
+            if (mapaLazy.isInitialized()) mapa.onDetach()
+        } catch (_: Exception) {
+        }
         super.onCleared()
     }
 }

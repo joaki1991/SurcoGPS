@@ -201,3 +201,6 @@
 
 ## 2026-10-15 - SPRINT-43 PASS - FASE 10 TERMINADA (v1.6.2)
 - Suites forzadas 70/70 + 74/74. Release v1.6.2 firmada en releases/. Instalar SIN borrar nada.
+
+## 2026-10-15 - SPRINT-44 PASS
+- MapaRetenido en VM (una creacion por proceso) + sonda SQL honesta. App 75/75.

@@ -47,4 +47,12 @@ class SondaAlmacenTest {
         assertFalse(r.ok)
         assertTrue(r.detalle.isNotBlank())
     }
+
+    @Test
+    fun veredictoSonda() {
+        assertEquals("SQL OK (escribe+lee+borra)", veredictoSonda(true, true))
+        assertTrue(veredictoSonda(false, true).startsWith("SQL fallo"))
+        assertTrue(veredictoSonda(false, false).startsWith("SQL fallo"))
+        assertTrue(veredictoSonda(true, false).startsWith("SQL fallo"))
+    }
 }

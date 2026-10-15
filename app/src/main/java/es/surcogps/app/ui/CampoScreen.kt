@@ -63,6 +63,7 @@ fun CampoScreen(vm: CampoViewModel) {
             )
         }
         MapaCampo(
+            retenido = vm.mapa,
             modo = modo,
             alCambiarModo = vm::cambiarModoMapa,
             modifier = Modifier.fillMaxWidth().weight(1f),

@@ -82,6 +82,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 41 | QA + v1.6.1 en releases/ | QA | 40 | ✅ PASS |
 | 42 | Cache de teselas en dir garantizado | Mapa | 37 | ✅ PASS |
 | 43 | QA + v1.6.2 en releases/ | QA | 42 | ✅ PASS |
+| 44 | Mapa retenido + sonda SQL corregida | Mapa | 37 | ✅ PASS |
+| 45 | QA + v1.7.0 en releases/ | QA | 44 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -196,6 +198,22 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-39 — QA + v1.6.0
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.6.0-release.apk`
   verificado, informe.
+### SPRINT-40 — Sonda de almacenamiento
+- Aceptación: sonda directa + SQL real en diagnóstico e informe; suite verde.
+### SPRINT-41 — QA + v1.6.1
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.6.1-release.apk`
+  verificado, informe.
+### SPRINT-42 — Caché garantizada
+- Aceptación: fallback a caché interna con sonda real; suite verde.
+### SPRINT-43 — QA + v1.6.2
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.6.2-release.apk`
+  verificado, informe.
+### SPRINT-44 — Mapa retenido + sonda SQL
+- Aceptación: una creación de MapView por proceso; veredicto SQL honesto;
+  suite verde.
+### SPRINT-45 — QA + v1.7.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.7.0-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -208,7 +226,7 @@ Fase 6 (fix NPE): 27 → 28.
 Fase 7 (reversión mapa): 29 → 30.
 Fase 8 (fluidez + rumbo home + rotación): 31 → 32 · 31 → 33 · 32 + 33 → 34.
 Fase 9 (topes de descarga): 35 → 36.
-Fase 10 (bloqueos + mapa gris): 37 → 38 → 39 (38–39 pendientes de logs).
+Fase 10 (bloqueos + mapa gris): 37 → 38 → 39 · 40 → 41 · 42 → 43 · 44 → 45.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.

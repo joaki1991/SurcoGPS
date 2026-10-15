@@ -74,7 +74,7 @@ fun hayRed(context: Context): Boolean {
  * Estado aplicado al MapView (sobrevive a recomposiciones; no es estado Compose).
  * El mapa se configura UNA vez (estilo Traccar); los updates solo tocan lo que cambia.
  */
-private class EstadoMapaAplicado {
+class EstadoMapaAplicado {
     var ultimoModo: ModoMapa? = null
     var ultimoCentro: LatLon? = null
     var moviendoProgramatico = false
@@ -95,6 +95,7 @@ private class EstadoMapaAplicado {
  */
 @Composable
 fun MapaCampo(
+    retenido: MapaRetenido,
     modo: ModoMapa,
     alCambiarModo: (ModoMapa) -> Unit,
     modifier: Modifier = Modifier,
@@ -121,24 +122,21 @@ fun MapaCampo(
     alCola: (Long) -> Unit = {}
 ) {
     val context = LocalContext.current
-    val franja = remember { FranjaOverlay(0xFF2E7D32.toInt(), 0xFF1B5E20.toInt()) }
-    val punto = remember { UbicacionOverlay() }
-    val fijaActual by rememberUpdatedState(alFijarAncla)
-    val lineas = remember { LineasOverlay { p -> fijaActual(p) } }
-    val aplicado = remember { EstadoMapaAplicado() }
+    // Objetos retenidos en el ViewModel: sobreviven a la navegación entre
+    // pestañas (antes se destruían y recreaban con hilos y recargas).
+    val mapView = retenido.mapView
+    val franja = retenido.franja
+    val punto = retenido.punto
+    val lineas = retenido.lineas
+    val overlayRef = retenido.overlayRef
+    val srcEsri = retenido.srcEsri
+    val aplicado = retenido.aplicado
+    retenido.alFijarAncla = alFijarAncla
+    retenido.alGesto = alGestoManual
     val gestoActual by rememberUpdatedState(alGestoManual)
     val destinoActual by rememberUpdatedState(alDestinoAplicado)
-    val srcEsri = remember { FuentesMapa.esriImagery() }
     // Cola visible en la píldora (1×/s) + publicada al VM (diagnóstico).
     var colaVista by remember { mutableStateOf(0L) }
-    val overlayRef = remember {
-        TilesOverlay(
-            MapTileProviderBasic(context.applicationContext).apply {
-                tileSource = FuentesMapa.esriReference()
-            },
-            context
-        )
-    }
     // Diagnóstico de red hacia Esri (una comprobación por cambio de modo).
     var estadoRed by remember(modo) {
         mutableStateOf<EstadoRed?>(
@@ -157,62 +155,12 @@ fun MapaCampo(
             estadoRed = null
         }
     }
-    val mapView = remember {
-        Configuration.getInstance().load(
-            context.applicationContext,
-            context.applicationContext.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
-        )
-        // User-agent con contacto, como exige la Tile Usage Policy de OSM.
-        Configuration.getInstance().userAgentValue =
-            "SurcoGPS/1.2 (https://github.com/joaki1991/SurcoGPS)"
-        // Caché de teselas en directorio garantizado: en algunos dispositivos
-        // el path por defecto no es escribible (todo lo descargado se pierde y
-        // el mapa queda gris). Solo se cambia si el defecto falla de verdad.
-        val cfg = Configuration.getInstance()
-        try {
-            val defecto = cfg.osmdroidTileCache
-            val usable = defecto != null && SondaAlmacen.probarEscrituraDirecta(defecto).ok
-            if (resolverDirCache(usable) == ModoCache.INTERNA) {
-                val interna = java.io.File(context.applicationContext.cacheDir, "teselas")
-                cfg.osmdroidTileCache = interna
-                RegistroDiag.registrar(
-                    context.applicationContext.filesDir, "mapa",
-                    "cache por defecto no escribible → interna"
-                )
-            }
-        } catch (_: Exception) {
-        }
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            setBuiltInZoomControls(false)
-            controller.setZoom(6.0)
-            controller.setCenter(VISTA_DEFECTO)
-            // Capas persistentes (orden: referencia, franja, líneas, punto, atribución).
-            // El gesto de rotación (dos dedos) va primero para recibir toques.
-            overlays.add(RotationGestureOverlay(this))
-            overlays.add(franja)
-            overlays.add(lineas)
-            overlays.add(punto)
-            overlays.add(CopyrightOverlay(context))
-            addMapListener(object : MapListener {
-                override fun onScroll(event: ScrollEvent?): Boolean {
-                    if (!aplicado.moviendoProgramatico) gestoActual()
-                    return false
-                }
-
-                override fun onZoom(event: ZoomEvent?): Boolean = false
-            })
-            RegistroDiag.registrar(
-                context.applicationContext.filesDir, "mapa", "MapView creado"
-            )
-        }
-    }
     DisposableEffect(Unit) {
+        // Solo pausa/reanuda el renderizado: los proveedores e hilos siguen
+        // vivos en el retenido (sin reconstruir al volver a Campo).
         mapView.onResume()
         onDispose {
             mapView.onPause()
-            mapView.onDetach()
         }
     }
     // Sondeo de la cola de teselas (1×/s): si drena, el mapa carga; si no,

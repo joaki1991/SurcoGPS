@@ -70,3 +70,10 @@ object SondaAlmacen {
         }
     }
 }
+
+/**
+ * Veredicto legible de la sonda SQL (lógica pura, testeable).
+ */
+fun veredictoSonda(guardado: Boolean, existe: Boolean): String =
+    if (guardado && existe) "SQL OK (escribe+lee+borra)"
+    else "SQL fallo (guardado=$guardado existe=$existe)"
