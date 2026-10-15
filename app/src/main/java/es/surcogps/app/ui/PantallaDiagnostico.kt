@@ -58,7 +58,12 @@ fun PantallaDiagnostico(vm: CampoViewModel) {
             Text("Memoria: ${s.oom} OOM · Cola: ${if (s.cola < 0) "…" else s.cola}")
         } ?: Text("Contadores: sin lectura (abrir Campo antes).")
         e.cache?.let {
-            Text("Caché de teselas: ${it.ficheros} ficheros · ${it.bytes / 1024} KB")
+            Text("Caché de teselas: ${it.ficheros} ficheros · ${it.bytes / 1024} KB · libre ${it.libreMB} MB")
+            Text("Sonda directa: ${it.sondaDirecta ?: "sin ejecutar"}")
+            Text("Sonda SQL: ${it.sondaSql ?: "sin ejecutar (botón Ejecutar diagnóstico)"}")
+            if (it.top.isNotEmpty()) {
+                Text("Ficheros: ${it.top.take(5).joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+            }
         }
         Text(
             "Cómo leerlo: HTTP ok + errores de descarga altos = el servidor limita; " +

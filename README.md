@@ -78,6 +78,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 37 | Diagnóstico bloqueos + mapa (fuentes osmdroid + protocolo) | Diag | — | ✅ PASS |
 | 38 | Diagnóstico autónomo en app (registro, pantalla, exportar) | Diag | 37 | ✅ PASS |
 | 39 | QA + v1.6.0 en releases/ | QA | 38 | ✅ PASS |
+| 40 | Sonda de almacenamiento + informe | Diag | 37 | ✅ PASS |
+| 41 | QA + v1.6.1 en releases/ | QA | 40 | ⏳ pendiente |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 

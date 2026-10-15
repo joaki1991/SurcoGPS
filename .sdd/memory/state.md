@@ -189,3 +189,6 @@
 
 ## 2026-10-15 - SPRINT-39 PASS - FASE 10 TERMINADA (v1.6.0)
 - Suites forzadas 70/70 + 68/68. Release v1.6.0 firmada en releases/. Pendiente fisico: pantalla diag + exportar.
+
+## 2026-10-15 - SPRINT-40 PASS
+- Sonda de almacenamiento (directa + SQL real) en diagnostico + informe. App 72/72.

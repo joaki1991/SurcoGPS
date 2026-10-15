@@ -23,6 +23,7 @@ import es.surcogps.app.soporte.CrashReporter
 import es.surcogps.app.soporte.EstadoCache
 import es.surcogps.app.soporte.InformeDiag
 import es.surcogps.app.soporte.RegistroDiag
+import es.surcogps.app.soporte.SondaAlmacen
 import es.surcogps.app.soporte.StatsFuente
 import es.surcogps.app.soporte.zonaGruesa
 import es.surcogps.core.GuidanceEngine
@@ -260,6 +261,30 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
                     "$nombre: ${if (r.ok) "OK" else "FALLO"} HTTP ${r.codigo ?: "?"} ${r.ms}ms ${r.error ?: ""}"
                 )
             }
+            // Sonda SQL al escritor real de teselas (misma ruta que osmdroid).
+            try {
+                val escritor = org.osmdroid.tileprovider.modules.SqlTileWriter()
+                val fuente = FuentesMapa.esriImagery()
+                val idx = MapTileIndex.getTileIndex(0, 0, 0)
+                val guardado = escritor.saveFile(
+                    fuente, idx, java.io.ByteArrayInputStream(byteArrayOf(1, 2, 3, 4)), 0L
+                )
+                val existe = try {
+                    escritor.exists(fuente, idx)
+                } catch (_: Exception) {
+                    false
+                }
+                try {
+                    escritor.remove(fuente, idx)
+                } catch (_: Exception) {
+                }
+                _sondaSql.value =
+                    if (guardado && existe) "SQL OK (escribe+lee+borra)"
+                    else "SQL fallo (guardado=$guardado existe=$existe)"
+            } catch (e: Exception) {
+                _sondaSql.value = "SQL excepción: ${e.javaClass.simpleName}: ${e.message}"
+            }
+            RegistroDiag.registrar(app.filesDir, "diag", "sonda SQL: ${_sondaSql.value}")
             RegistroDiag.registrar(app.filesDir, "diag", "chequeo manual terminado")
             refrescarDiagnostico()
         }
@@ -312,20 +337,19 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     private fun medirCache(): EstadoCache? {
         return try {
             val dir = Configuration.getInstance().osmdroidTileCache
-            if (!dir.isDirectory) return EstadoCache(0, 0)
-            var bytes = 0L
-            var n = 0
-            dir.walkTopDown().take(6000).forEach {
-                if (it.isFile) {
-                    bytes += it.length()
-                    n++
-                }
-            }
-            EstadoCache(bytes, n)
+            val info = SondaAlmacen.inspeccionar(dir)
+            val directa = SondaAlmacen.probarEscrituraDirecta(dir)
+            EstadoCache(
+                info.bytes, info.ficheros, info.libreMB, info.top,
+                if (directa.ok) "OK" else "FALLO: ${directa.detalle}",
+                _sondaSql.value
+            )
         } catch (_: Exception) {
             null
         }
     }
+
+    private val _sondaSql = MutableStateFlow<String?>(null)
 
     companion object {
         /** Velocidad mínima para considerar marcha fiable (m/s). */

@@ -27,7 +27,14 @@ data class StatsFuente(
 )
 
 /** Estado de caché de teselas (solo lectura). */
-data class EstadoCache(val bytes: Long, val ficheros: Int)
+data class EstadoCache(
+    val bytes: Long,
+    val ficheros: Int,
+    val libreMB: Long = -1,
+    val top: List<String> = emptyList(),
+    val sondaDirecta: String? = null,
+    val sondaSql: String? = null
+)
 
 /**
  * Constructor del informe TXT (lógica pura, testeable). No incluye coordenadas
@@ -68,7 +75,12 @@ object InformeDiag {
         appendLine()
         appendLine("== Caché de teselas ==")
         if (cache == null) appendLine("Sin lectura.")
-        else appendLine("${cache.ficheros} ficheros · ${cache.bytes / 1024} KB")
+        else {
+            appendLine("${cache.ficheros} ficheros · ${cache.bytes / 1024} KB · libre ${cache.libreMB} MB")
+            appendLine("Sonda directa: ${cache.sondaDirecta ?: "sin ejecutar"}")
+            appendLine("Sonda SQL: ${cache.sondaSql ?: "sin ejecutar"}")
+            cache.top.take(10).forEach { appendLine("  - $it") }
+        }
         appendLine()
         appendLine("== Comprobaciones manuales ==")
         if (chequeos.isEmpty()) appendLine("Sin ejecutar (botón Ejecutar diagnóstico).")
