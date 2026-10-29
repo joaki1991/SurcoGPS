@@ -1,7 +1,7 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 10 TERMINADA (sprints 37-45 PASS) — entrega v1.7.0.
-> Instalar SIN borrar nada; comprobar una sola creación de MapView por proceso.
+> **Estado global:** ✅ FASE 11 TERMINADA (sprints 46-47 PASS) — entrega v1.8.0.
+> Reabrir con datos acumulados ya no bloquea: listar sesiones cuesta milisegundos.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
 > Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
 
@@ -84,6 +84,8 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 43 | QA + v1.6.2 en releases/ | QA | 42 | ✅ PASS |
 | 44 | Mapa retenido + sonda SQL corregida | Mapa | 37 | ✅ PASS |
 | 45 | QA + v1.7.0 en releases/ | QA | 44 | ✅ PASS |
+| 46 | Reapertura con datos (índice de sesiones) | Rendimiento | 45 | ✅ PASS |
+| 47 | QA + v1.8.0 en releases/ | QA | 46 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -214,6 +216,13 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 ### SPRINT-45 — QA + v1.7.0
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.7.0-release.apk`
   verificado, informe.
+### SPRINT-46 — Reapertura con datos acumulados
+- Aceptación: `list()` deja de escalar con las celdas (índice por sesión),
+  autoguardado sin reparsear el resto, sin recarga al reabrir en el mismo
+  proceso, guardado atómico; medición antes/después real.
+### SPRINT-47 — QA + v1.8.0
+- Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.8.0-release.apk`
+  verificado, informe.
 
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
@@ -227,6 +236,7 @@ Fase 7 (reversión mapa): 29 → 30.
 Fase 8 (fluidez + rumbo home + rotación): 31 → 32 · 31 → 33 · 32 + 33 → 34.
 Fase 9 (topes de descarga): 35 → 36.
 Fase 10 (bloqueos + mapa gris): 37 → 38 → 39 · 40 → 41 · 42 → 43 · 44 → 45.
+Fase 11 (reapertura con datos): 46 → 47.
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -308,20 +318,23 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 42 | `e0fc871` | OK |
 | 43 | `f27809b` | OK |
 | 44 | `9ec74ab` | OK |
-| 45 | (este commit) | (con este push) |
+| 45 | `fc99257` | OK |
+| 46 | `c1911b7` | OK |
+| 47 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.7.0 (actual)**: [`releases/SurcoGPS-v1.7.0-release.apk`](releases/SurcoGPS-v1.7.0-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.7.0: mapa retenido + sonda SQL honesta).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.7.0-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.6.2-release.apk`, `releases/SurcoGPS-v1.6.1-release.apk`,
-  `releases/SurcoGPS-v1.6.0-release.apk`, `releases/SurcoGPS-v1.5.1-release.apk`,
-  `releases/SurcoGPS-v1.5.0-release.apk`, `releases/SurcoGPS-v1.4.0-release.apk`,
-  `releases/SurcoGPS-v1.3.2-release.apk`, `releases/SurcoGPS-v1.3.1-release.apk`,
-  `releases/SurcoGPS-v1.3.0-release.apk`, `releases/SurcoGPS-v1.2.0-release.apk`,
-  `releases/SurcoGPS-v1.1.0-release.apk`, `releases/SurcoGPS-v1.0.0-release.apk`.
+- **v1.8.0 (actual)**: [`releases/SurcoGPS-v1.8.0-release.apk`](releases/SurcoGPS-v1.8.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.8.0: reabrir con datos ya no bloquea).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.8.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.7.0-release.apk`, `releases/SurcoGPS-v1.6.2-release.apk`,
+  `releases/SurcoGPS-v1.6.1-release.apk`, `releases/SurcoGPS-v1.6.0-release.apk`,
+  `releases/SurcoGPS-v1.5.1-release.apk`, `releases/SurcoGPS-v1.5.0-release.apk`,
+  `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,
+  `releases/SurcoGPS-v1.3.1-release.apk`, `releases/SurcoGPS-v1.3.0-release.apk`,
+  `releases/SurcoGPS-v1.2.0-release.apk`, `releases/SurcoGPS-v1.1.0-release.apk`,
+  `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
 - Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).

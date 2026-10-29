@@ -212,3 +212,7 @@
 - Causa raiz de "reabrir con datos va fatal": list() expandia TODAS las sesiones (HashSet<Long> por m2) en cada autoguardado (15 s) y en cada entrada a Campo; restaurarTrasMuerte recargaba aunque estuviera en memoria.
 - Arreglo: indice .meta por sesion (list() 2 ms), guardado atomico, sin load() ni recargarListas en autoguardado, sin recarga si la sesion esta viva, tramos solo al crecer.
 - Medido en emulador Android 14 con 6 sesiones x 100k celdas: 57950 ms / 22128 ms CPU (ANR) -> 89 ms / 17 ms CPU. JVM: 489 -> 2 ms. Core 79/79 + app 75/75.
+
+## 2026-10-29 - SPRINT-47 PASS - FASE 11 TERMINADA (v1.8.0)
+- Suites forzadas core 79/79 + app 75/75. Release v1.8.0 (versionCode 14) firmada en releases/ y verificada con aapt/apksigner.
+- Pendiente en movil real: instalar encima, abrir/cerrar y cambiar de pestana; el registro debe decir "sesion en memoria: no se recarga al reabrir" y "listado de N sesiones" en ms.
