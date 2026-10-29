@@ -1,6 +1,7 @@
 package es.surcogps.core
 
 import java.io.File
+import java.nio.file.StandardCopyOption
 
 /**
  * Sesión de trabajo: todo lo necesario para reanudar sin perder progreso.
@@ -53,9 +54,72 @@ class FileSessionStore(private val dir: File) : SessionStore {
         return File(dir, "$safe.json")
     }
 
+    /** Índice diminuto de la sesión (nombre, instantes, celdas) para listar. */
+    private fun metaFor(id: String): File {
+        val safe = id.replace(Regex("[^A-Za-z0-9_-]"), "_").ifEmpty { "sesion" }
+        return File(dir, "$safe.meta")
+    }
+
+    /**
+     * Guardado atómico: se escribe a `.tmp` y se renombra. Si el proceso muere
+     * a mitad, la sesión anterior sigue íntegra (antes quedaba un JSON truncado
+     * y la sesión se perdía).
+     */
     override fun save(session: WorkSession) {
         require(session.id.isNotBlank()) { "id de sesión vacío" }
-        fileFor(session.id).writeText(toJson(session), Charsets.UTF_8)
+        val destino = fileFor(session.id)
+        val texto = toJson(session)
+        val tmp = File(dir, destino.name + ".tmp")
+        tmp.writeText(texto, Charsets.UTF_8)
+        try {
+            java.nio.file.Files.move(
+                tmp.toPath(), destino.toPath(),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE
+            )
+        } catch (_: Exception) {
+            // Sistema sin renombrado atómico: se reemplaza igualmente.
+            if (!tmp.renameTo(destino)) {
+                destino.writeText(texto, Charsets.UTF_8)
+                tmp.delete()
+            }
+        }
+        escribirMeta(session)
+    }
+
+    /** Índice de listado: unas decenas de bytes, sin celdas ni recorrido. */
+    private fun escribirMeta(s: WorkSession) = escribirMetaResumen(
+        SessionSummary(s.id, s.name, s.updatedMs, s.finished, s.cells.size)
+    )
+
+    private fun escribirMetaResumen(s: SessionSummary) {
+        val texto = buildString {
+            append('{')
+            str("id", s.id); append(',')
+            str("name", s.name); append(',')
+            num("updatedMs", s.updatedMs.toDouble()); append(',')
+            append("\"finished\":").append(if (s.finished) "true" else "false").append(',')
+            append("\"cellCount\":").append(s.cellCount)
+            append('}')
+        }
+        val destino = metaFor(s.id)
+        val tmp = File(dir, destino.name + ".tmp")
+        try {
+            tmp.writeText(texto, Charsets.UTF_8)
+            try {
+                java.nio.file.Files.move(
+                    tmp.toPath(), destino.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE
+                )
+            } catch (_: Exception) {
+                if (!tmp.renameTo(destino)) {
+                    destino.writeText(texto, Charsets.UTF_8)
+                    tmp.delete()
+                }
+            }
+        } catch (_: Exception) {
+            // Sin índice se sigue pudiendo listar (se reconstruye al vuelo).
+            tmp.delete()
+        }
     }
 
     override fun load(id: String): WorkSession? {
@@ -69,20 +133,41 @@ class FileSessionStore(private val dir: File) : SessionStore {
     }
 
     override fun list(): List<SessionSummary> {
-        return dir.listFiles { f -> f.extension == "json" }
-            ?.mapNotNull { f ->
-                try {
-                    fromJson(f.readText(Charsets.UTF_8))
-                } catch (_: Exception) {
-                    null
-                }
+        val ficheros = dir.listFiles { f -> f.extension == "json" } ?: return emptyList()
+        return ficheros.mapNotNull { f ->
+            try {
+                // Camino normal: índice de decenas de bytes (no se lee el cuerpo).
+                val meta = metaFor(f.nameWithoutExtension)
+                val desdeIndice = if (meta.isFile) leerMeta(meta.readText(Charsets.UTF_8)) else null
+                if (desdeIndice != null) return@mapNotNull desdeIndice
+                // Sesiones anteriores al índice (o índice ilegible): se resume
+                // el cuerpo en streaming y se deja el índice escrito.
+                val resumen = SessionResumen.leer(f.readText(Charsets.UTF_8))
+                if (resumen != null) escribirMetaResumen(resumen)
+                resumen
+            } catch (_: Exception) {
+                null
             }
-            ?.sortedByDescending { it.updatedMs }
-            ?.map { SessionSummary(it.id, it.name, it.updatedMs, it.finished, it.cells.size) }
-            ?: emptyList()
+        }.sortedByDescending { it.updatedMs }
     }
 
-    override fun delete(id: String): Boolean = fileFor(id).delete()
+    private fun leerMeta(texto: String): SessionSummary? = try {
+        val m = MiniJson.parseObject(texto)
+        SessionSummary(
+            id = m["id"] as String,
+            name = m["name"] as String,
+            updatedMs = (m["updatedMs"] as Number).toLong(),
+            finished = m["finished"] as Boolean,
+            cellCount = (m["cellCount"] as Number).toInt()
+        )
+    } catch (_: Exception) {
+        null
+    }
+
+    override fun delete(id: String): Boolean {
+        metaFor(id).delete()
+        return fileFor(id).delete()
+    }
 
     // ---- JSON manual (escritura) ----
 
@@ -157,6 +242,218 @@ class FileSessionStore(private val dir: File) : SessionStore {
             updatedMs = dbl("updatedMs").toLong(),
             finished = root["finished"] as Boolean
         )
+    }
+}
+
+/**
+ * Lector de resumen en streaming.
+ *
+ * `list()` solo necesita id, nombre, instantes, estado y nº de celdas. La
+ * versión anterior parseaba el JSON completo y **expandía** las celdas a un
+ * `HashSet<Long>` (una `Long` boxeada por m²) y reconstruía el track entero
+ * (un `LatLon` por punto). Con datos acumulados eso son cientos de miles de
+ * objetos por llamada, y se ejecutaba en cada autoguardado y en cada entrada a
+ * Campo: GC, CPU y ralentización al reabrir la app.
+ *
+ * Este lector recorre el texto una vez, salta `track` y cuenta las celdas
+ * sumando los rangos ya compactados, sin expandirlos.
+ */
+object SessionResumen {
+
+    fun leer(json: String): SessionSummary? = try {
+        Escaner(json).resumen()
+    } catch (_: Exception) {
+        null
+    }
+
+    private class Escaner(private val s: String) {
+        private var i = 0
+
+        fun resumen(): SessionSummary {
+            val campos = HashMap<String, Any>(8)
+            objeto(campos)
+            val id = campos["id"] as? String ?: throw IllegalArgumentException("sin id")
+            val nombre = campos["name"] as? String ?: ""
+            val actualizado = (campos["updatedMs"] as? Double)?.toLong() ?: 0L
+            val terminada = campos["finished"] as? Boolean ?: false
+            val celdas = (campos["cellCount"] as? Int) ?: 0
+            return SessionSummary(id, nombre, actualizado, terminada, celdas)
+        }
+
+        private fun objeto(destino: MutableMap<String, Any>) {
+            espacio()
+            esperar('{')
+            espacio()
+            if (ver('}')) return
+            while (true) {
+                espacio()
+                val clave = cadena()
+                espacio()
+                esperar(':')
+                espacio()
+                when (clave) {
+                    "cells" -> destino["cellCount"] = contarCeldas()
+                    "track" -> saltarValor()
+                    "id", "name" -> destino[clave] = cadena()
+                    "updatedMs", "startedMs" -> destino[clave] = numero()
+                    "finished" -> destino[clave] = booleano()
+                    else -> saltarValor()
+                }
+                espacio()
+                if (ver(',')) continue
+                esperar('}')
+                return
+            }
+        }
+
+        /** Suma rangos `[[a,b],...]` de cada fila, sin materializar celdas. */
+        private fun contarCeldas(): Int {
+            espacio()
+            esperar('{')
+            var total = 0L
+            espacio()
+            if (ver('}')) return 0
+            while (true) {
+                cadena() // clave: fila iy
+                espacio()
+                esperar(':')
+                espacio()
+                esperar('[')
+                espacio()
+                if (!ver(']')) {
+                    while (true) {
+                        espacio()
+                        esperar('[')
+                        val desde = entero()
+                        espacio()
+                        esperar(',')
+                        val hasta = entero()
+                        espacio()
+                        esperar(']')
+                        if (hasta >= desde) total += hasta - desde + 1
+                        espacio()
+                        if (ver(',')) continue
+                        esperar(']')
+                        break
+                    }
+                }
+                espacio()
+                if (ver(',')) continue
+                esperar('}')
+                break
+            }
+            return if (total > Int.MAX_VALUE) Int.MAX_VALUE else total.toInt()
+        }
+
+        /** Salta un valor completo (objeto, array, cadena, número o literal). */
+        private fun saltarValor() {
+            espacio()
+            if (i >= s.length) throw IllegalArgumentException("fin inesperado")
+            when (s[i]) {
+                '"' -> {
+                    cadena()
+                    return
+                }
+                '{', '[' -> {
+                    var profundidad = 0
+                    while (i < s.length) {
+                        when (s[i]) {
+                            '"' -> {
+                                cadena()
+                                continue
+                            }
+                            '{', '[' -> profundidad++
+                            '}', ']' -> {
+                                profundidad--
+                                i++
+                                if (profundidad == 0) return
+                                continue
+                            }
+                        }
+                        i++
+                    }
+                    throw IllegalArgumentException("valor sin cerrar")
+                }
+                else -> while (i < s.length && s[i] !in ",}] \t\r\n") i++
+            }
+        }
+
+        private fun cadena(): String {
+            espacio()
+            esperar('"')
+            val sb = StringBuilder()
+            while (true) {
+                if (i >= s.length) throw IllegalArgumentException("cadena sin cerrar")
+                val c = s[i++]
+                if (c == '"') return sb.toString()
+                if (c != '\\') {
+                    sb.append(c)
+                    continue
+                }
+                if (i >= s.length) throw IllegalArgumentException("escape incompleto")
+                when (val e = s[i++]) {
+                    '"' -> sb.append('"')
+                    '\\' -> sb.append('\\')
+                    '/' -> sb.append('/')
+                    'n' -> sb.append('\n')
+                    'r' -> sb.append('\r')
+                    't' -> sb.append('\t')
+                    'u' -> {
+                        if (i + 4 > s.length) throw IllegalArgumentException("unicode incompleto")
+                        sb.append(s.substring(i, i + 4).toInt(16).toChar())
+                        i += 4
+                    }
+                    else -> throw IllegalArgumentException("escape desconocido: $e")
+                }
+            }
+        }
+
+        private fun numero(): Double {
+            espacio()
+            val inicio = i
+            while (i < s.length && s[i] !in ",}] \t\r\n") i++
+            return s.substring(inicio, i).toDouble()
+        }
+
+        private fun entero(): Long {
+            espacio()
+            val inicio = i
+            if (i < s.length && (s[i] == '-' || s[i] == '+')) i++
+            while (i < s.length && s[i].isDigit()) i++
+            return s.substring(inicio, i).toLong()
+        }
+
+        private fun booleano(): Boolean {
+            espacio()
+            return when {
+                s.startsWith("true", i) -> {
+                    i += 4
+                    true
+                }
+                s.startsWith("false", i) -> {
+                    i += 5
+                    false
+                }
+                else -> throw IllegalArgumentException("booleano inválido")
+            }
+        }
+
+        private fun espacio() {
+            while (i < s.length && s[i].isWhitespace()) i++
+        }
+
+        private fun ver(c: Char): Boolean {
+            if (i < s.length && s[i] == c) {
+                i++
+                return true
+            }
+            return false
+        }
+
+        private fun esperar(c: Char) {
+            if (i >= s.length || s[i] != c) throw IllegalArgumentException("se esperaba '$c'")
+            i++
+        }
     }
 }
 
@@ -312,13 +609,19 @@ object CellCodec {
         }
     }
 
-    /** Inversa de [compact]. */
+    /** Inversa de [compact]. Reserva el tamaño exacto (evita rehashing masivo). */
     fun expand(rows: Map<Int, List<Pair<Int, Int>>>): Set<Long> {
-        val cells = mutableSetOf<Long>()
+        var total = 0L
+        for (ranges in rows.values) {
+            for ((x0, x1) in ranges) if (x1 >= x0) total += (x1 - x0 + 1)
+        }
+        val capacidad = if (total > Int.MAX_VALUE / 2) Int.MAX_VALUE / 2 else (total * 4 / 3 + 1).toInt()
+        val cells = HashSet<Long>(capacidad)
         for ((iy, ranges) in rows) {
+            val fila = iy.toLong() and 0xFFFFFFFFL
             for ((x0, x1) in ranges) {
                 for (ix in x0..x1) {
-                    cells.add((ix.toLong() shl 32) xor (iy.toLong() and 0xFFFFFFFFL))
+                    cells.add((ix.toLong() shl 32) xor fila)
                 }
             }
         }

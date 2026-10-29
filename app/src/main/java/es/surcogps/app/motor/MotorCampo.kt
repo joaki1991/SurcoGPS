@@ -16,6 +16,7 @@ import es.surcogps.app.mapa.DestinoCamara
 import es.surcogps.app.mapa.EncuadreInicial
 import es.surcogps.app.mapa.PoliticaEncuadre
 import es.surcogps.app.servicio.TrackingService
+import es.surcogps.app.soporte.RegistroDiag
 import es.surcogps.core.FileParcelaStore
 import es.surcogps.core.FileSessionStore
 import es.surcogps.core.GuidanceEngine
@@ -107,6 +108,10 @@ class MotorCampo(private val app: Application) {
     val sesionActivaNombre: StateFlow<String?> = _sesionActivaNombre.asStateFlow()
 
     private var ultimoAutoguardadoMs = 0L
+    /** Instante de inicio real de la sesión activa (no se pierde al guardar). */
+    private var sesionInicioMs = 0L
+    /** Evita inundar el registro repitiendo el aviso de sesión reutilizada. */
+    private var avisoReusoHecho = false
 
     /** Banderillero: ajustes + fix crudo a través del pipeline. */
     val guiado: StateFlow<EstadoGuiado> =        combine(ajustes, tracker.fix) { a, fix ->
@@ -156,7 +161,10 @@ class MotorCampo(private val app: Application) {
         }
         engine!!.registrar(apero)
         _areaHa.value = engine!!.areaHa
-        _tramos.value = engine!!.tramos.toList()
+        // Solo se publica una lista nueva cuando de verdad ha crecido: copiar y
+        // comparar 20 000 tramos en cada fix era trabajo constante inútil.
+        val lista = engine!!.tramos
+        if (lista.size != _tramos.value.size) _tramos.value = lista.toList()
         autoguardarSiToca()
     }
 
@@ -196,12 +204,23 @@ class MotorCampo(private val app: Application) {
             val activo = repo.trackingActivo.first()
             val idSesion = repo.sesionActivaId.first()
             if (!Politicas.debeReanudarServicio(activo, tienePermisoUbicacion())) return@launch
-            if (idSesion.isNotEmpty()) {
+            // Si la sesión ya está viva en memoria (misma sesión, mismo proceso),
+            // no se vuelve a leer el fichero: entrar a Campo o volver de segundo
+            // plano no debe reparsear ni reconstruir la cobertura.
+            val yaCargada = engine != null && idSesion.isNotEmpty() &&
+                _sesionActivaId.value == idSesion
+            if (!yaCargada && idSesion.isNotEmpty()) {
                 sesionesStore.load(idSesion)?.let { s ->
                     aplicarSesion(s)
                     _sesionActivaId.value = idSesion
                     _sesionActivaNombre.value = s.name
                 }
+            } else if (yaCargada && !avisoReusoHecho) {
+                avisoReusoHecho = true
+                RegistroDiag.registrar(
+                    app.filesDir, "sesion",
+                    "sesión en memoria: no se recarga al reabrir"
+                )
             }
             pipeline.reiniciar()
             encuadre.reiniciar()
@@ -274,8 +293,16 @@ class MotorCampo(private val app: Application) {
     fun guardarPuerta(p: Float) = alcance.launch { repo.guardarPuerta(p) }
 
     private fun recargarListas() {
+        val t0 = System.currentTimeMillis()
+        val c0 = android.os.SystemClock.currentThreadTimeMillis()
         _parcelas.value = parcelasStore.listar()
-        _sesiones.value = sesionesStore.list()
+        val sesiones = sesionesStore.list()
+        _sesiones.value = sesiones
+        RegistroDiag.registrar(
+            app.filesDir, "sesion",
+            "listado de ${sesiones.size} sesiones en ${System.currentTimeMillis() - t0} ms " +
+                "(CPU ${android.os.SystemClock.currentThreadTimeMillis() - c0} ms)"
+        )
     }
 
     fun crearParcela(nombre: String): Boolean {
@@ -328,7 +355,7 @@ class MotorCampo(private val app: Application) {
             offset = ImplementOffset(a.offsetLateralM, a.offsetLongitudinalM),
             track = eng.snapshotTrack(),
             cells = eng.snapshotCells(),
-            startedMs = ahora,
+            startedMs = if (sesionInicioMs > 0L) sesionInicioMs else ahora,
             updatedMs = ahora,
             finished = false
         )
@@ -363,6 +390,7 @@ class MotorCampo(private val app: Application) {
         _areaHa.value = 0.0
         _tramos.value = emptyList()
         ultimoAutoguardadoMs = ahora
+        sesionInicioMs = ahora
         return true
     }
 
@@ -379,6 +407,8 @@ class MotorCampo(private val app: Application) {
     }
 
     private suspend fun aplicarSesion(s: WorkSession) {
+        val t0 = System.currentTimeMillis()
+        val c0 = android.os.SystemClock.currentThreadTimeMillis()
         repo.guardarAncla(s.anchor.lat, s.anchor.lon)
         repo.guardarRumbo(s.headingDeg)
         repo.guardarAncho(s.widthM)
@@ -391,24 +421,46 @@ class MotorCampo(private val app: Application) {
         engineKey = "${s.anchor.lat},${s.anchor.lon}|${s.widthM}"
         _areaHa.value = eng.areaHa
         _tramos.value = eng.tramos.toList()
+        sesionInicioMs = s.startedMs
+        RegistroDiag.registrar(
+            app.filesDir, "sesion",
+            "cargada ${s.cells.size} celdas en ${System.currentTimeMillis() - t0} ms " +
+                "(CPU ${android.os.SystemClock.currentThreadTimeMillis() - c0} ms)"
+        )
     }
 
     fun guardarSesionActiva(terminada: Boolean = false) {
         val id = _sesionActivaId.value ?: return
         val foto = fotoSesionActiva() ?: return
-        ultimoAutoguardadoMs = System.currentTimeMillis()
+        val ahora = System.currentTimeMillis()
+        ultimoAutoguardadoMs = ahora
+        // Se guarda solo esta sesión: antes se releía el fichero entero y se
+        // reparseaban TODAS las sesiones en cada autoguardado (cada 15 s).
+        val aGuardar = foto.copy(
+            name = _sesionActivaNombre.value ?: foto.name,
+            updatedMs = ahora,
+            finished = terminada
+        )
         alcance.launch(Dispatchers.IO) {
-            val previa = sesionesStore.load(id)
-            sesionesStore.save(
-                foto.copy(
-                    name = previa?.name ?: foto.name,
-                    startedMs = previa?.startedMs ?: foto.startedMs,
-                    updatedMs = ultimoAutoguardadoMs,
-                    finished = terminada
-                )
-            )
-            recargarListas()
+            sesionesStore.save(aGuardar)
+            publicarResumen(aGuardar)
         }
+    }
+
+    /** Actualiza en memoria el resumen de una sesión (sin tocar el disco). */
+    private fun publicarResumen(s: WorkSession) {
+        val resumen = SessionSummary(
+            id = s.id,
+            name = s.name,
+            updatedMs = s.updatedMs,
+            finished = s.finished,
+            cellCount = s.cells.size
+        )
+        val lista = _sesiones.value.toMutableList()
+        val idx = lista.indexOfFirst { it.id == s.id }
+        if (idx >= 0) lista[idx] = resumen else lista.add(resumen)
+        lista.sortByDescending { it.updatedMs }
+        _sesiones.value = lista
     }
 
     fun terminarSesion() = guardarSesionActiva(terminada = true)

@@ -131,6 +131,103 @@ class SessionStoreTest {
     }
 
     @Test
+    fun resumenCoincideConLaCargaCompleta() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        val s = sesionMuestra("r1")
+        store.save(s)
+        val r = assertNotNull(SessionResumen.leer(File(dir, "r1.json").readText(Charsets.UTF_8)))
+        assertEquals(s.id, r.id)
+        assertEquals(s.name, r.name)
+        assertEquals(s.updatedMs, r.updatedMs)
+        assertEquals(s.finished, r.finished)
+        assertEquals(s.cells.size, r.cellCount)
+        // El listado debe usar el resumen y coincidir con la carga real.
+        val resumenListado = store.list().single()
+        assertEquals(s.cells.size, resumenListado.cellCount)
+    }
+
+    @Test
+    fun resumenConCeldasVaciasYNegativas() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        val cells = setOf(
+            (0L shl 32) xor (-5L and 0xFFFFFFFFL),
+            (1L shl 32) xor (-5L and 0xFFFFFFFFL),
+            (-7L shl 32) xor (3L and 0xFFFFFFFFL)
+        )
+        store.save(WorkSession(id = "neg", name = "Neg", anchor = ancla, headingDeg = 0.0, widthM = 6.0, cells = cells))
+        store.save(WorkSession(id = "vac", name = "Vacía", anchor = ancla, headingDeg = 0.0, widthM = 6.0))
+        val porId = store.list().associateBy { it.id }
+        assertEquals(3, assertNotNull(porId["neg"]).cellCount)
+        assertEquals(0, assertNotNull(porId["vac"]).cellCount)
+    }
+
+    @Test
+    fun resumenDeFicheroCorruptoEsNull() {
+        assertNull(SessionResumen.leer("{esto no es json"))
+        assertNull(SessionResumen.leer(""))
+        assertNull(SessionResumen.leer("{\"name\":\"sin id\"}"))
+    }
+
+    @Test
+    fun guardadoNoDejaTemporales() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        store.save(sesionMuestra("t1"))
+        store.save(sesionMuestra("t1").copy(name = "Segunda"))
+        assertEquals("Segunda", assertNotNull(store.load("t1")).name)
+        assertTrue(dir.listFiles()!!.none { it.name.endsWith(".tmp") })
+    }
+
+    @Test
+    fun indiceEvitaLeerElCuerpo() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        store.save(sesionMuestra("i1"))
+        val indice = File(dir, "i1.meta")
+        assertTrue(indice.isFile)
+        assertTrue(indice.length() < 300, "índice de ${indice.length()} B")
+        // El listado sigue siendo correcto leyendo solo el índice.
+        val r = store.list().single()
+        assertEquals("i1", r.id)
+        assertEquals(sesionMuestra("i1").cells.size, r.cellCount)
+    }
+
+    @Test
+    fun sesionAntiguaSinIndiceSeMigra() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        store.save(sesionMuestra("legacy"))
+        File(dir, "legacy.meta").delete() // simula sesión de versión anterior
+        val r = store.list().single()
+        assertEquals("legacy", r.id)
+        assertEquals(sesionMuestra("legacy").cells.size, r.cellCount)
+        assertTrue(File(dir, "legacy.meta").isFile, "el índice debe quedar escrito")
+    }
+
+    @Test
+    fun indiceIlegibleSeReconstruye() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        store.save(sesionMuestra("roto"))
+        File(dir, "roto.meta").writeText("{no es json", Charsets.UTF_8)
+        val r = store.list().single()
+        assertEquals("roto", r.id)
+        assertEquals(sesionMuestra("roto").cells.size, r.cellCount)
+    }
+
+    @Test
+    fun borrarEliminaTambienElIndice() {
+        val dir = tmpDir()
+        val store = FileSessionStore(dir)
+        store.save(sesionMuestra("b1"))
+        assertTrue(store.delete("b1"))
+        assertFalse(File(dir, "b1.meta").exists())
+        assertTrue(store.list().isEmpty())
+    }
+
+    @Test
     fun compactacionAgrupaRangos() {        val store = FileSessionStore(tmpDir())
         // Fila 0: ix 0,1,2,5,6 → rangos [0-2],[5-6].
         val cells = setOf(

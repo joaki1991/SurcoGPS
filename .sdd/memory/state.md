@@ -207,3 +207,8 @@
 
 ## 2026-10-15 - SPRINT-45 PASS - FASE 10 TERMINADA (v1.7.0)
 - Suites forzadas 70/70 + 75/75. Release v1.7.0 firmada en releases/. Pendiente fisico: una creacion de MapView + sonda honesta.
+
+## 2026-10-29 - SPRINT-46 PASS
+- Causa raiz de "reabrir con datos va fatal": list() expandia TODAS las sesiones (HashSet<Long> por m2) en cada autoguardado (15 s) y en cada entrada a Campo; restaurarTrasMuerte recargaba aunque estuviera en memoria.
+- Arreglo: indice .meta por sesion (list() 2 ms), guardado atomico, sin load() ni recargarListas en autoguardado, sin recarga si la sesion esta viva, tramos solo al crecer.
+- Medido en emulador Android 14 con 6 sesiones x 100k celdas: 57950 ms / 22128 ms CPU (ANR) -> 89 ms / 17 ms CPU. JVM: 489 -> 2 ms. Core 79/79 + app 75/75.
