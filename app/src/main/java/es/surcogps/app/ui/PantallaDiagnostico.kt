@@ -51,6 +51,7 @@ fun PantallaDiagnostico(vm: CampoViewModel) {
         val e = d!!
         Text("Permiso ubicación: ${if (e.permisoUbicacion) "sí" else "no"}")
         Text("GPS del sistema: ${if (e.gpsActivo) "activo" else "apagado o sin permiso"}")
+        Text("Fuente GPS: ${e.fuenteGps}")
         Text("Último fix: ${e.ultimoFix ?: "sin datos"}")
         e.stats?.let { s ->
             Text("Descarga: ${s.erroresDescarga} errores")

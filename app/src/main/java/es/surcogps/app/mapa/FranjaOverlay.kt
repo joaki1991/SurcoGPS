@@ -26,14 +26,16 @@ class FranjaOverlay(
     private val paintRelleno = Paint().apply {
         color = colorRelleno
         style = Paint.Style.FILL
-        alpha = 110
+        // Muy opaco: sobre imagen satélite el verde claro se perdía. Deja ver
+        // el terreno, pero la superficie trabajada se distingue de un vistazo.
+        alpha = EstiloFranja.ALFA_RELLENO
         isAntiAlias = true
     }
     private val paintBorde = Paint().apply {
         color = colorBorde
         style = Paint.Style.STROKE
-        strokeWidth = 2f
-        alpha = 160
+        strokeWidth = EstiloFranja.GROSOR_BORDE
+        alpha = EstiloFranja.ALFA_BORDE
         isAntiAlias = true
     }
 

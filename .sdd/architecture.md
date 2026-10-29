@@ -42,9 +42,12 @@ App Android nativa (Kotlin + Jetpack Compose, MVVM) + núcleo de dominio puro `:
   cuantizados a 1 m en marco local) → área = celdas × 1 m², sin duplicar solapes.
   Memoria acotada; sesiones de 100 ha ≈ 1 M celdas máx. (aceptable; se compacta por
   rangos al persistir).
-- **ADR-04 Fused + NMEA.** Fused para consumo/batería; `OnNmeaMessageListener`
-  expone GGA/RMC para diagnóstico y deja puerta a GNSS externo RTK vía mock
-  location (documentado, no implementado el BT propio en v1).
+- **ADR-04 Fused opcional + LocationManager + NMEA.** Fused (Play Services) se
+  usa solo si está operativo: mejor consumo/batería. Si no lo está, o si no da
+  fix en 20 s, se piden actualizaciones al `LocationManager` del dispositivo
+  (GPS y red), de modo que la app funciona sin Play Services ni Internet.
+  `OnNmeaMessageListener` expone GGA/RMC para diagnóstico y deja puerta a GNSS
+  externo RTK vía mock location (documentado, no implementado el BT propio en v1).
 - **ADR-05 Persistencia local.** Ficheros JSON en almacenamiento interno (sesiones vía
   `FileSessionStore`, parcelas vía `FileParcelaStore`, ajustes vía DataStore).
   Room se evaluó (entidades + KSP 2.0.20-1.0.25 compilados y verificados) pero se

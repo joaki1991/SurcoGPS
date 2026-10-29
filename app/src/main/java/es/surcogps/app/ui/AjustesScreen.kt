@@ -37,12 +37,19 @@ fun AjustesScreen(vm: CampoViewModel, alDiagnostico: () -> Unit = {}) {
             onValueChangeFinished = { vm.guardarRumbo(rumboUi.toDouble()) },
             valueRange = 0f..359f, steps = 358)
 
-        Text("Ancho del apero: ${"%.1f".format(a.anchoAperoM)} m")
+        // Valor en vivo mientras se arrastra: con paso de 0,1 m el texto debe
+        // seguir al dedo, no esperar a que se suelte el slider.
         var anchoUi by remember(a.anchoAperoM) { mutableStateOf(a.anchoAperoM.toFloat()) }
+        Text("Ancho del apero: ${"%.1f".format(anchoUi)} m (paso 0,1 m)")
         Slider(value = anchoUi,
             onValueChange = { anchoUi = it },
-            onValueChangeFinished = { vm.guardarAncho(anchoUi.toDouble()) },
-            valueRange = 0.5f..30f, steps = 58)
+            onValueChangeFinished = {
+                vm.guardarAncho(PasosAjuste.redondearAncho(anchoUi.toDouble()))
+            },
+            valueRange = PasosAjuste.ANCHO_MIN_M..PasosAjuste.ANCHO_MAX_M,
+            steps = PasosAjuste.pasosSlider(
+                PasosAjuste.ANCHO_MIN_M, PasosAjuste.ANCHO_MAX_M, PasosAjuste.ANCHO_PASO_M
+            ))
 
         var shiftTxt by remember(a.desplazamientoLateralM) {
             mutableStateOf("%.1f".format(a.desplazamientoLateralM))

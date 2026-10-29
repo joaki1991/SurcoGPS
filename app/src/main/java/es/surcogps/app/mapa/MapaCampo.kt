@@ -146,6 +146,17 @@ fun MapaCampo(
     var httpOk by remember(modo) { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(modo) {
         if (configPara(modo).base == BaseFuente.ESRI) {
+            // Sin red no se lanza la sonda: fallaría igual y bloquearía hasta
+            // 8 s la primera pintada. El aviso de caché ya está visible.
+            if (!hayRed(context)) {
+                httpOk = false
+                estadoRed = EstadoRed.FALLO
+                RegistroDiag.registrar(
+                    context.applicationContext.filesDir, "mapa",
+                    "sonda HTTP omitida: sin red (se usa la caché)"
+                )
+                return@LaunchedEffect
+            }
             val ok = withContext(Dispatchers.IO) {
                 DiagnosticoTeselas.comprobar(FuentesMapa.urlMuestraEsri())
             }

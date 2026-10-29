@@ -177,6 +177,7 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
     data class EstadoDiagnostico(
         val permisoUbicacion: Boolean,
         val gpsActivo: Boolean,
+        val fuenteGps: String,
         val ultimoFix: String?,
         val stats: StatsFuente?,
         val cache: EstadoCache?,
@@ -237,7 +238,8 @@ class CampoViewModel(app: Application) : AndroidViewModel(app) {
                 0
             }
             _diag.value = EstadoDiagnostico(
-                permiso, gps, ultimoFix, stats, cache, eventos, cierres,
+                permiso, gps, es.surcogps.app.gps.etiquetaFuente(motor.fuenteGps.value),
+                ultimoFix, stats, cache, eventos, cierres,
                 _chequeos.toList()
             )
         }

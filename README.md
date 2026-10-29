@@ -1,9 +1,11 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 11 TERMINADA (sprints 46-47 PASS) — entrega v1.8.0.
-> Reabrir con datos acumulados ya no bloquea: listar sesiones cuesta milisegundos.
+> **Estado global:** ✅ FASE 12 TERMINADA (sprint 48 PASS) - entrega v1.9.0.
+> Ancho de apero en pasos de 0,1 m, franja trabajada bien visible y GPS del
+> propio dispositivo aunque no haya Internet ni Google Play Services. Internet
+> solo mejora las teselas del mapa.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
-> Última actualización: 2026-10-13 (sesión principal OpenCode, sin subagentes).
+> Última actualización: 2026-10-29 (sesión principal OpenCode, sin subagentes).
 
 ## 1. Objetivo y alcance
 SurcoGPS es una app Android nativa (Kotlin + Jetpack Compose) de **guiado GPS agrícola**:
@@ -86,6 +88,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 45 | QA + v1.7.0 en releases/ | QA | 44 | ✅ PASS |
 | 46 | Reapertura con datos (índice de sesiones) | Rendimiento | 45 | ✅ PASS |
 | 47 | QA + v1.8.0 en releases/ | QA | 46 | ✅ PASS |
+| 48 | Ancho 0,1 m, pintado opaco y GPS sin Internet | GPS+UI | 47 | PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -224,6 +227,14 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 - Aceptación: suites verdes, builds OK, `releases/SurcoGPS-v1.8.0-release.apk`
   verificado, informe.
 
+### SPRINT-48 - Ancho de 0,1 m, pintado opaco y GPS sin Internet
+- Aceptación: slider 0,5-30 m en pasos de 0,1 (294 pasos intermedios) con
+  redondeo a 1 decimal; franja con alfa de relleno 210 y borde 245; GPS con
+  Fused si existe y `LocationManager` del dispositivo si no, con respaldo a los
+  20 s sin fix; sin red no se espera la sonda HTTP. Suites core 79/79 y app
+  88/88; APK v1.9.0 (versionCode 15) verificada. Verificación visual en móvil
+  físico pendiente (el emulador entra en ANR de System UI).
+
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
 01 → 06 → 07 → 08 → 09 → 10 → 11 → 12 · 04 alimenta 08 · 05 alimenta 10.
@@ -320,15 +331,17 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 44 | `9ec74ab` | OK |
 | 45 | `fc99257` | OK |
 | 46 | `c1911b7` | OK |
-| 47 | (este commit) | (con este push) |
+| 47 | `7e0998e` | OK |
+| 48 | (este commit) | (con este push) |
 
 ## 12. Instalación y uso (v1.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.8.0 (actual)**: [`releases/SurcoGPS-v1.8.0-release.apk`](releases/SurcoGPS-v1.8.0-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.8.0: reabrir con datos ya no bloquea).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.8.0-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.7.0-release.apk`, `releases/SurcoGPS-v1.6.2-release.apk`,
+- **v1.9.0 (actual)**: [`releases/SurcoGPS-v1.9.0-release.apk`](releases/SurcoGPS-v1.9.0-release.apk)
+  (8,6 MB, firmado, `es.surcogps.app` v1.9.0: ancho en pasos de 0,1 m, franja
+  más visible y GPS del dispositivo sin depender de Internet ni Play Services).
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.9.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.8.0-release.apk`, `releases/SurcoGPS-v1.7.0-release.apk`, `releases/SurcoGPS-v1.6.2-release.apk`,
   `releases/SurcoGPS-v1.6.1-release.apk`, `releases/SurcoGPS-v1.6.0-release.apk`,
   `releases/SurcoGPS-v1.5.1-release.apk`, `releases/SurcoGPS-v1.5.0-release.apk`,
   `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,

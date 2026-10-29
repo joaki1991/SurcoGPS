@@ -216,3 +216,13 @@
 ## 2026-10-29 - SPRINT-47 PASS - FASE 11 TERMINADA (v1.8.0)
 - Suites forzadas core 79/79 + app 75/75. Release v1.8.0 (versionCode 14) firmada en releases/ y verificada con aapt/apksigner.
 - Pendiente en movil real: instalar encima, abrir/cerrar y cambiar de pestana; el registro debe decir "sesion en memoria: no se recarga al reabrir" y "listado de N sesiones" en ms.
+
+## 2026-10-29 - SPRINT-48 PASS - v1.9.0
+- Ancho del apero en pasos de 0,1 m (295 posiciones, 294 pasos intermedios; redondeo a 1 decimal antes de guardar). Texto en vivo durante el arrastre.
+- Franja trabajada mas opaca: alfa de relleno 110 -> 210 y borde 160 -> 245 (colores y geometria intactos). Test impide volver a bajarlo.
+- GPS sin dependencia de Internet/Play Services: si Fused no esta operativo se usa LocationManager del dispositivo al instante; si Fused esta pero no da fix en 20 s, se anade el GPS del sistema como respaldo. Se publica la fuente en Diagnostico.
+- Sin red no se lanza la sonda HTTP de Esri (antes hasta 8 s): se mantiene el aviso de cache.
+- Verificado en emulador: GMS desactivado -> "Play Services no operativo (codigo 3)", "respaldo del sistema: 1 proveedor(es)" y dumpsys location con 16 posiciones entregadas a es.surcogps.app; wifi/datos apagados -> "sonda HTTP omitida: sin red" en 325 ms.
+- Suites forzadas core 79/79 + app 88/88 (13 casos nuevos). Debug 12.171.677 B; release v1.9.0 (versionCode 15) 8.647.012 B, firmada CN=SurcoGPS-Dev, SHA-256 45544656...B20C93.
+- Pendiente en movil real: contraste visual de la franja sobre satelite, pasos de 0,1 en pantalla y prueba de campo con GPS real. El emulador entra en ANR de System UI y no sirve para validar la pintura en pantalla.
+

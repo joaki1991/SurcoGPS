@@ -10,6 +10,7 @@ import es.surcogps.app.cobertura.TramoFranja
 import es.surcogps.app.data.Ajustes
 import es.surcogps.app.data.AjustesRepository
 import es.surcogps.app.gps.EstadoGuiado
+import es.surcogps.app.gps.FuenteGps
 import es.surcogps.app.gps.GuiadoPipeline
 import es.surcogps.app.gps.LocationTracker
 import es.surcogps.app.mapa.DestinoCamara
@@ -64,6 +65,8 @@ class MotorCampo(private val app: Application) {
         alcance, SharingStarted.WhileSubscribed(5_000), Ajustes()
     )
     val nmeaSentencias: StateFlow<Int> = tracker.nmeaSentencias
+    /** Fuente GPS del último fix (Fused o GPS del sistema), para diagnóstico. */
+    val fuenteGps: StateFlow<FuenteGps?> = tracker.fuente
 
     // ---- Cobertura ----
     private var engine: CoberturaEngine? = null
