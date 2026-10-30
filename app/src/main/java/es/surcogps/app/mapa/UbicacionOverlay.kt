@@ -88,30 +88,39 @@ class UbicacionOverlay : Overlay() {
         val ref = proj.toPixels(GeoPoint(hasta.lat, hasta.lon), Point())
         val pxPorM = hypot((ref.x - centro.x).toDouble(), (ref.y - centro.y).toDouble()) / 10.0
         if (!pxPorM.isFinite() || pxPorM <= 0) return
+
+        // Tamaños en dp reales: en pantallas de alta densidad el punto y la
+        // flecha deben verse desde la cabina del tractor.
+        val d = mapView.resources.displayMetrics.density
+        val cx = centro.x.toFloat()
+        val cy = centro.y.toFloat()
+
         // Cono de precisión (radio = incertidumbre estimada).
-        val radioPx = (e.precisionM * pxPorM).toFloat().coerceAtLeast(4f)
-        canvas.drawCircle(centro.x.toFloat(), centro.y.toFloat(), radioPx, pPrecisionRelleno)
-        canvas.drawCircle(centro.x.toFloat(), centro.y.toFloat(), radioPx, pPrecisionBorde)
-        // Flecha de rumbo (solo con marcha fiable), compensada por el giro del mapa.
+        val radioPx = (e.precisionM * pxPorM).toFloat().coerceAtLeast(4f * d)
+        canvas.drawCircle(cx, cy, radioPx, pPrecisionRelleno)
+        canvas.drawCircle(cx, cy, radioPx, pPrecisionBorde)
+
+        // Flecha de orientación (brújula o rumbo de marcha), compensada por el
+        // giro del mapa (la app mantiene el norte arriba).
         e.rumboDeg?.let { rumbo ->
             canvas.save()
             canvas.rotate(
-                anguloFlecha(rumbo, orientacionMapa.toDouble()),
-                centro.x.toFloat(), centro.y.toFloat()
+                anguloFlecha(rumbo, orientacionMapa.toDouble()), cx, cy
             )
             val path = Path()
-            val h = 34f
-            val w = 26f
-            path.moveTo(centro.x.toFloat(), centro.y.toFloat() - h / 2)
-            path.lineTo(centro.x.toFloat() + w / 2, centro.y.toFloat() + h / 2)
-            path.lineTo(centro.x.toFloat() - w / 2, centro.y.toFloat() + h / 2)
+            val h = 42f * d
+            val w = 32f * d
+            path.moveTo(cx, cy - h * 0.78f)
+            path.lineTo(cx + w / 2, cy + h * 0.28f)
+            path.lineTo(cx, cy + h * 0.08f)
+            path.lineTo(cx - w / 2, cy + h * 0.28f)
             path.close()
             canvas.drawPath(path, pFlecha)
             canvas.drawPath(path, pFlechaBorde)
             canvas.restore()
         }
         // Punto azul con halo (siempre encima).
-        canvas.drawCircle(centro.x.toFloat(), centro.y.toFloat(), 13f, pHalo)
-        canvas.drawCircle(centro.x.toFloat(), centro.y.toFloat(), 9f, pPunto)
+        canvas.drawCircle(cx, cy, 13f * d, pHalo)
+        canvas.drawCircle(cx, cy, 9f * d, pPunto)
     }
 }

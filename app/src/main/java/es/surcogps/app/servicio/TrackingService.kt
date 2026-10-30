@@ -12,20 +12,20 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import es.surcogps.app.MainActivity
 import es.surcogps.app.SurcoApp
-import es.surcogps.app.motor.Politicas
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Seguimiento GPS con pantalla apagada (foreground service tipo `location`).
- * - `START_STICKY`: el sistema lo recrea tras muerte del proceso; al recrear,
- *   el motor decide si reanuda (tracking activo + permiso) o no hace nada.
- * - Acción `DETENER`: para el tracking desde la notificación.
- * - Sin Internet no se pierde nada: todo es local (ficheros + DataStore).
+ *
+ * La app v2 no reanuda sesiones ni arranca sola tras un reinicio: si el usuario
+ * cierra la app, el seguimiento termina. Mientras está vivo, la notificación
+ * muestra precisión, velocidad, hectáreas y estado de la pintura.
  */
 class TrackingService : Service() {
 
@@ -37,6 +37,7 @@ class TrackingService : Service() {
 
     private val alcance = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var ultimaNotifMs = 0L
+    private var observando = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -52,43 +53,53 @@ class TrackingService : Service() {
             return START_NOT_STICKY
         }
         arrancarPrimerPlano()
-        motor().restaurarTrasMuerte()
         observarEstado()
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun motor() = (application as SurcoApp).motor
 
     private fun arrancarPrimerPlano() {
-        val notif = notificacion(motor().areaHa.value, null, null)
+        val notif = notificacion(0.0, null, null, true)
         if (Build.VERSION.SDK_INT >= 29) {
-            startForeground(
-                NOTIF_ID, notif,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
+            startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {
             startForeground(NOTIF_ID, notif)
         }
     }
 
-    private var observando = false
-
     private fun observarEstado() {
         if (observando) return
         observando = true
         alcance.launch {
-            combine(motor().areaHa, motor().guiado) { ha, g -> Triple(ha, g.xteM, g.linea) }
-                .collect { (ha, xte, linea) ->
+            combine(
+                motor().areaHa,
+                motor().guiado,
+                motor().registrando
+            ) { ha, g, pintando -> Triple(ha, g, pintando) }
+                .collect { (ha, g, pintando) ->
                     val ahora = System.currentTimeMillis()
                     if (ahora - ultimaNotifMs < 2_000) return@collect
                     ultimaNotifMs = ahora
+                    val fix = g.fix
+                    val notif = notificacion(
+                        ha,
+                        fix?.accuracyM?.takeIf { it.isFinite() }?.roundToInt(),
+                        fix?.speedMps?.let { (it * 3.6f).roundToInt() },
+                        pintando
+                    )
                     val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                    nm.notify(NOTIF_ID, notificacion(ha, xte, linea))
+                    nm.notify(NOTIF_ID, notif)
                 }
         }
     }
 
-    private fun notificacion(ha: Double, xte: Double?, linea: Int?): Notification {
+    private fun notificacion(
+        ha: Double,
+        precisionM: Int?,
+        velocidadKmh: Int?,
+        pintando: Boolean
+    ): Notification {
         val detener = PendingIntent.getService(
             this, 0,
             Intent(this, TrackingService::class.java).setAction(ACCION_DETENER),
@@ -99,12 +110,20 @@ class TrackingService : Service() {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val estado = buildString {
+            append(if (pintando) "Pintando" else "Pintura en pausa")
+            append(" · ").append("%.2f".format(ha)).append(" ha")
+            if (precisionM != null) append(" · ±").append(precisionM).append(" m")
+            if (velocidadKmh != null) append(" · ").append(velocidadKmh).append(" km/h")
+        }
         return NotificationCompat.Builder(this, CANAL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle(Politicas.textoNotificacion(ha, xte, linea))
-            .setContentText("Pulsa para abrir SurcoGPS")
+            .setContentTitle("SurcoGPS")
+            .setContentText(estado)
             .setContentIntent(abrir)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Detener", detener)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel, "Detener", detener
+            )
             .setOngoing(true)
             .build()
     }

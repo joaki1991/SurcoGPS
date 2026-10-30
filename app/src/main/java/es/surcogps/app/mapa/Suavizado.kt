@@ -36,4 +36,11 @@ class SuavizadorRumbo(private val alfa: Double = 0.35) {
         }
         return (Math.toDegrees(atan2(sx, sy)) + 360) % 360
     }
+
+    /** Olvida el histórico (al parar/reanudar la brújula o cambiar de sensor). */
+    fun reiniciar() {
+        hay = false
+        sx = 0.0
+        sy = 0.0
+    }
 }

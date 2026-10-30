@@ -1,44 +1,36 @@
 package es.surcogps.app
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Surface
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import es.surcogps.app.soporte.RegistroDiag
-import es.surcogps.app.ui.AjustesScreen
 import es.surcogps.app.ui.CampoScreen
 import es.surcogps.app.ui.CampoViewModel
-import es.surcogps.app.ui.PantallaDiagnostico
-import es.surcogps.app.ui.ParcelaScreen
-import es.surcogps.app.ui.SesionScreen
 
+/**
+ * Una sola Activity, una sola pantalla. Sin navegación inferior ni destinos
+ * secundarios: el mapa ocupa todo el lienzo y los controles flotan encima.
+ */
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onCreate")
+        enableEdgeToEdge()
+        // En campo la pantalla debe quedar encendida mientras se trabaja.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        RegistroDiag.registrar(filesDir, "ciclo", "MainActivity.onCreate (v2)")
         setContent {
-            MaterialTheme {
-                SurcoGPSApp()
-            }
+            SurcoGPSApp()
         }
     }
 
@@ -68,48 +60,27 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private data class Destino(val ruta: String, val etiqueta: String)
-
 @Composable
 fun SurcoGPSApp() {
-    val nav = rememberNavController()
-    val destinos = listOf(
-        Destino("campo", "Campo"),
-        Destino("parcela", "Parcela"),
-        Destino("sesion", "Sesión"),
-        Destino("ajustes", "Ajustes")
-    )
-    val iconos = mapOf(
-        "campo" to Icons.Filled.Home,
-        "parcela" to Icons.AutoMirrored.Filled.List,
-        "sesion" to Icons.Filled.PlayArrow,
-        "ajustes" to Icons.Filled.Settings
-    )
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                val actual by nav.currentBackStackEntryAsState()
-                val ruta = actual?.destination?.route
-                destinos.forEach { d ->
-                    NavigationBarItem(
-                        selected = ruta == d.ruta,
-                        onClick = { nav.navigate(d.ruta) { launchSingleTop = true } },
-                        icon = { Icon(iconos[d.ruta]!!, contentDescription = d.etiqueta) },
-                        label = { Text(d.etiqueta) }
-                    )
-                }
-            }
-        }
-    ) { inner ->
-        val vm: CampoViewModel = viewModel()
-        NavHost(nav, startDestination = "campo", Modifier.padding(inner)) {
-            composable("campo") { CampoScreen(vm) }
-            composable("parcela") { ParcelaScreen(vm) }
-            composable("sesion") { SesionScreen(vm) }
-            composable("ajustes") {
-                AjustesScreen(vm, alDiagnostico = { nav.navigate("diagnostico") })
-            }
-            composable("diagnostico") { PantallaDiagnostico(vm) }
+    MaterialTheme(
+        colorScheme = darkColorScheme(
+            primary = Color(0xFF9CCC65),
+            onPrimary = Color(0xFF1B2E00),
+            primaryContainer = Color(0xFF33691E),
+            onPrimaryContainer = Color(0xFFE8F5E9),
+            secondary = Color(0xFFFFD54F),
+            surface = Color(0xFF1C1D20),
+            onSurface = Color(0xFFF1F1F1),
+            surfaceVariant = Color(0xFF2A2C30),
+            onSurfaceVariant = Color(0xFFC7C7C7),
+            background = Color(0xFF000000),
+            onBackground = Color(0xFFF1F1F1),
+            error = Color(0xFFEF9A9A)
+        )
+    ) {
+        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            val vm: CampoViewModel = viewModel()
+            CampoScreen(vm)
         }
     }
 }

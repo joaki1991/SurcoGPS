@@ -1,41 +1,48 @@
 # SurcoGPS — Plan maestro SDD
 
-> **Estado global:** ✅ FASE 12 TERMINADA (sprint 48 PASS) - entrega v1.9.0.
-> Ancho de apero en pasos de 0,1 m, franja trabajada bien visible y GPS del
-> propio dispositivo aunque no haya Internet ni Google Play Services. Internet
-> solo mejora las teselas del mapa.
+> **Estado global:** ✅ FASE 13 TERMINADA (sprint 49 PASS) — entrega **v2.0.0**.
+> App de campo simplificada a **una sola pantalla**: punto azul + flecha de
+> rumbo, recorrido pintado según el ancho del apero (pasos de 0,1 m), líneas
+> guía acotadas y mapa a pantalla completa en horizontal. Sin parcelas ni
+> sesiones que gestionar; los datos ya guardados en el móvil no se tocan.
 > Rama principal: `main` · Remoto: `origin` (https://github.com/joaki1991/SurcoGPS.git)
-> Última actualización: 2026-10-29 (sesión principal OpenCode, sin subagentes).
+> Última actualización: 2026-10-30 (sesión principal OpenCode, sin subagentes).
 
 ## 1. Objetivo y alcance
 SurcoGPS es una app Android nativa (Kotlin + Jetpack Compose) de **guiado GPS agrícola**:
 genera **líneas rectas paralelas** según rumbo (0°=N, 90°=E, 180°=S, 270°=O) y ancho de
 apero, registra las **pasadas reales del tractor** y **colorea la superficie trabajada**
-sobre un **mapa híbrido** (satélite + cartografía). Actúa como **banderillero visual**.
+sobre **satélite o cartografía** (una fuente cada vez). Actúa como **banderillero visual**.
 **No es conducción automática.**
 
-## 2. Funcionalidades finales previstas
-1. Proyecto reproducible (Gradle wrapper, `es.surcogps.app`, minSdk 26 / target 34).
-2. Mapa híbrido real (OSMDroid Mapnik + Esri World Imagery), zoom/desplazamiento,
-   posición actual, atribución, comportamiento offline documentado.
-3. Configuración de rumbo 0–359° y ancho de apero 0.5–30 m; líneas paralelas métricas,
-   referencia estable, reajuste de rumbo y desplazamiento lateral.
-4. GPS real: lat/lon, velocidad, precisión estimada visible; filtrado (puerta de
-   precisión 10 m, puerta de salto, caducidad); compatibilidad documentada con GNSS externo.
-5. Registro de recorrido + franja del apero, coloreado progresivo, distinción
-   trabajado/pendiente, solapamientos sin duplicar, hectáreas reales, offset antena→apero.
-6. Persistencia local: parcelas, sesiones, reanudación, supervivencia a cierres.
-7. Seguimiento con pantalla apagada (foreground service `location` + notificación),
-   permisos correctos, recuperación ante errores/reinicios.
-8. APKs debug y release generados, verificados (`aapt dump badging`, `apksigner verify`),
-   con instrucciones de instalación.
+## 2. Funcionalidades de la v2.0.0 (pantalla única)
+1. Mapa a pantalla completa (OSMDroid): satélite Esri World Imagery o calles
+   OpenStreetMap, con atribución visible y conmutación con un botón.
+2. Punto azul con flecha de rumbo (brújula del móvil; respaldo GPS solo en
+   movimiento) y círculo de precisión estimada. Sin promesas centimétricas.
+3. Recorrido pintado con el ancho real del apero, en pasos de 0,1 m (0,5–30 m).
+   Solo se pinta con fixes aceptados; cambiar el ancho no borra lo ya pintado.
+4. Líneas guía paralelas según ancho y orientación (0–359°), con presets N/E/S/O,
+   brújula y ancla. En pantalla se dibujan solo las líneas visibles, dentro de
+   10 km y con un tope de 200; si el zoom no permite distinguirlas, solo la activa.
+5. Seguimiento de posición («Seguir») y botón «Centrar»; el panel de control se
+   oculta para dejar todo el mapa y no tapa el punto azul.
+6. Pantalla encendida durante el trabajo y servicio en primer plano con
+   notificación, para seguir registrando con la app en segundo plano.
+7. «Nuevo recorrido» limpia solo la pintura en memoria: las sesiones y parcelas
+   guardadas en el dispositivo no se leen ni se borran.
+8. Persistencia local de ajustes (ancho, orientación y puerta de precisión) en
+   DataStore; sin telemetría ni claves. Internet solo mejora las teselas.
 
 ## 3. Arquitectura y tecnologías
 Ver `.sdd/architecture.md`. Resumen: `:core` Kotlin/JVM puro (GeoMath, GuidanceEngine,
 CoverageTracker, GpsFilter, ImplementOffset, SessionStore, tests JUnit5 sin SDK) +
 `:app` Android (Compose BOM 2024.09.00, OSMDroid 6.1.20, Play-services-location,
-Room 2.6.1, DataStore, foreground service). Kotlin 2.0.20 · AGP 8.5.2 · Gradle 8.10.2.
-Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
+DataStore, foreground service). En la v2 el `:app` es una sola pantalla: mapa,
+panel flotante y sensores; las clases de sesiones/parcelas del `:core` se conservan
+para no romper los datos ya guardados, pero la v2 no las usa. Kotlin 2.0.20 ·
+AGP 8.5.2 · Gradle 8.10.2. Sin API keys. Coste de mapas: 0 € en uso normal
+(política de tiles OSM/Esri).
 
 ## 4. Sprints (lista ordenada, dependencias y estado)
 
@@ -89,6 +96,7 @@ Sin API keys. Coste de mapas: 0 € en uso normal (política de tiles OSM/Esri).
 | 46 | Reapertura con datos (índice de sesiones) | Rendimiento | 45 | ✅ PASS |
 | 47 | QA + v1.8.0 en releases/ | QA | 46 | ✅ PASS |
 | 48 | Ancho 0,1 m, pintado opaco y GPS sin Internet | GPS+UI | 47 | PASS |
+| 49 | Simplificación v2.0.0: pantalla única, punto/flecha, pintado por ancho, líneas acotadas | App | 48 | ✅ PASS |
 
 Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
 
@@ -235,6 +243,17 @@ Leyenda: ⏳ pendiente · 🟡 en curso · ✅ PASS · ⛔ BLOCKED · ❌ FAIL.
   88/88; APK v1.9.0 (versionCode 15) verificada. Verificación visual en móvil
   físico pendiente (el emulador entra en ANR de System UI).
 
+### SPRINT-49 - Simplificación v2.0.0 (pantalla única de campo)
+- Aceptación: una sola pantalla edge-to-edge; mapa a pantalla completa en
+  horizontal con panel flotante ocultable; punto azul + flecha de brújula +
+  círculo de precisión; recorrido pintado con el ancho del apero (0,1 m) sin
+  borrarse al cambiarlo; líneas guía según ancho/orientación acotadas a lo
+  visible, a 10 km y a 200 líneas; «Nuevo recorrido» limpia solo la memoria;
+  las capas sobreviven a la rotación de pantalla; sin crash al arrancar.
+  Suites core 79/79 y app 103/103 (15 casos nuevos); APK v2.0.0 (versionCode
+  16) verificada y probada en emulador Android 14. Brújula, GPS de campo y
+  consumo pendientes de móvil físico.
+
 ## 6. Dependencias entre sprints
 01 → 02 → 03 ↘
 01 → 06 → 07 → 08 → 09 → 10 → 11 → 12 · 04 alimenta 08 · 05 alimenta 10.
@@ -248,6 +267,9 @@ Fase 8 (fluidez + rumbo home + rotación): 31 → 32 · 31 → 33 · 32 + 33 →
 Fase 9 (topes de descarga): 35 → 36.
 Fase 10 (bloqueos + mapa gris): 37 → 38 → 39 · 40 → 41 · 42 → 43 · 44 → 45.
 Fase 11 (reapertura con datos): 46 → 47.
+Fase 12 (ancho 0,1 m + GPS sin Internet): 48.
+Fase 13 (simplificación de campo): 49 (sustituye la UI de las fases 2–12;
+conserva `:core` y los datos guardados).
 
 ## 7. Criterios de aceptación globales
 - Geometría en marco ENU; tests borde (rumbo 0/359, anchos 0.5/30 m, solapes, saltos, reanudación) en verde.
@@ -332,16 +354,18 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 | 45 | `fc99257` | OK |
 | 46 | `c1911b7` | OK |
 | 47 | `7e0998e` | OK |
-| 48 | (este commit) | (con este push) |
+| 48 | `be25ce4` | OK |
+| 49 | (este commit) | (con este push) |
 
-## 12. Instalación y uso (v1.0.0)
+## 12. Instalación y uso (v2.0.0)
 
 ### Descarga directa desde GitHub
-- **v1.9.0 (actual)**: [`releases/SurcoGPS-v1.9.0-release.apk`](releases/SurcoGPS-v1.9.0-release.apk)
-  (8,6 MB, firmado, `es.surcogps.app` v1.9.0: ancho en pasos de 0,1 m, franja
-  más visible y GPS del dispositivo sin depender de Internet ni Play Services).
-- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v1.9.0-release.apk`
-- Anteriores: `releases/SurcoGPS-v1.8.0-release.apk`, `releases/SurcoGPS-v1.7.0-release.apk`, `releases/SurcoGPS-v1.6.2-release.apk`,
+- **v2.0.0 (actual)**: [`releases/SurcoGPS-v2.0.0-release.apk`](releases/SurcoGPS-v2.0.0-release.apk)
+  (8,5 MB, firmado, `es.surcogps.app` versión 2.0.0). Pantalla única de campo:
+  punto azul con flecha, pintado por ancho de apero y líneas guía acotadas.
+- URL directa: `https://github.com/joaki1991/SurcoGPS/raw/main/releases/SurcoGPS-v2.0.0-release.apk`
+- Anteriores: `releases/SurcoGPS-v1.9.0-release.apk`, `releases/SurcoGPS-v1.8.0-release.apk`,
+  `releases/SurcoGPS-v1.7.0-release.apk`, `releases/SurcoGPS-v1.6.2-release.apk`,
   `releases/SurcoGPS-v1.6.1-release.apk`, `releases/SurcoGPS-v1.6.0-release.apk`,
   `releases/SurcoGPS-v1.5.1-release.apk`, `releases/SurcoGPS-v1.5.0-release.apk`,
   `releases/SurcoGPS-v1.4.0-release.apk`, `releases/SurcoGPS-v1.3.2-release.apk`,
@@ -350,35 +374,38 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
   `releases/SurcoGPS-v1.0.0-release.apk`.
 
 ### Artefactos
-- Depuración: `app/build/outputs/apk/debug/app-debug.apk` (11,6 MB, firmada con clave debug).
-- Lanzamiento: `app/build/outputs/apk/release/app-release.apk` (8,3 MB, firmada con clave
-  local de desarrollo `CN=SurcoGPS-Dev`, SHA-256 `39:46:59:9E:F0:F4:2B:DE:96:DD:BC:38:2F:83:A3:8B:D2:7B:52:3F:35:E9:50:70:8B:2E:7A:63:F7:3C:C4:01`).
+- Depuración: `releases/SurcoGPS-v2.0.0-debug.apk` (12,0 MB, clave debug).
+- Lanzamiento: `releases/SurcoGPS-v2.0.0-release.apk` (8,5 MB, firmada con la clave
+  local de desarrollo `CN=SurcoGPS-Dev`; SHA-256 del APK
+  `073B725EBBFE406365F9D266A45C9CB5195160036A379CF4C6E1642E750051F5`).
 - Requisito: Android 8.0 (API 26) o superior. Package: `es.surcogps.app`.
 
 ### Instalar en otro dispositivo
-1. Copia el APK al móvil (USB, correo o descarga).
-2. En el móvil: permite «instalar aplicaciones desconocidas» para la app usada
-   (Ajustes → Seguridad) o confirma con `adb install app-release.apk`.
-3. Abre **SurcoGPS**, pulsa **Permitir ubicación** y concede «Mientras se usa la app».
+1. Copia el APK al móvil (USB, correo o descarga) o usa `adb install -r`.
+2. Permite «instalar aplicaciones desconocidas» para la app usada, o confirma
+   con `adb install app-release.apk`. Instalar **encima** conserva los datos.
+3. Abre **SurcoGPS** y concede la ubicación precisa («Mientras se usa la app»).
 4. Sin conexión funciona lo ya visitado (caché de teselas); con red se descargan
-   Mapnik (© OpenStreetMap contributors) y Esri World Imagery.
+   Esri World Imagery o Mapnik (© OpenStreetMap contributors).
 
-### Flujo de trabajo en campo (4 pasos)
-1. **Ancla (A)**: se fija sola en la primera posición válida, o pulsa **Fijar
-   ancla aquí**, o mantén pulsado el mapa sin ancla.
-2. **Rumbo (B)**: mantén pulsado el punto final en el mapa → rumbo fijado
-   (el ajuste fino sigue en Ajustes). Ajusta el ancho del apero.
-3. **Iniciar** y trabaja siguiendo las líneas blancas (la activa, en amarillo):
-   la franja del apero se colorea en verde; el HUD muestra precisión (±m),
-   velocidad, línea, XTE (→/←/✓) y hectáreas sin duplicar.
-4. **Pausar** en cabeceras; **Sesión → Terminar** al acabar. El mapa se gira con
-   dos dedos; ◎ vuelve a tu posición.
+### Flujo de trabajo en campo (una sola pantalla)
+1. Al abrir, el GPS arranca solo y el ancla de las líneas se coloca en la primera
+   posición válida (o pulsa **Ancla aquí** cuando quieras recolocarla).
+2. Ajusta el **ancho del apero** con «−»/«+» (pasos de 0,1 m) o el deslizador.
+3. Elige la **orientación**: deslizador, presets N/E/S/O, **Usar brújula** o deja
+   que el rumbo actual marque la dirección. La línea activa se resalta en amarillo.
+4. Trabaja siguiendo las líneas: la franja del apero se pinta en verde con cada
+   fix aceptado. La píldora muestra precisión (±m), velocidad y hectáreas.
+5. **Pausar pintura** en cabeceras; **Centrar** vuelve a tu posición; **Seguir**
+   mantiene el punto a la vista; **Ocultar** deja solo el mapa.
+6. **Nuevo recorrido** borra únicamente lo pintado en pantalla: las sesiones y
+   parcelas guardadas en el móvil no se tocan.
 
 ### Reconstruir y firmar
 ```powershell
 $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
-.\gradlew.bat :core:test                 # 70 tests
-.\gradlew.bat :app:testDebugUnitTest     # 20 tests
+.\gradlew.bat :core:test                 # 79 tests
+.\gradlew.bat :app:testDebugUnitTest     # 103 tests
 .\gradlew.bat :app:assembleDebug
 .\gradlew.bat :app:assembleRelease       # requiere clave en local.properties (ver abajo)
 ```
@@ -387,9 +414,10 @@ Firma release: genera tu keystore (`keytool -genkeypair ...`) y añade a
 `surco.keyAlias`, `surco.keyPassword`. Sin estas propiedades el release sale sin
 firmar. Para Google Play genera una clave dedicada y custódiala fuera del repo.
 
-### Verificación tras un cambio de hardware (pendiente)
-Con un dispositivo a mano: instala, concede permiso, fija ancla, camina 100 m en
-línea recta con ancho 6 m (≈600–780 m² por sesgo documentado del raster),
-comprueba que quieto no colorea, mata la app y reanuda (misma área), y deja la
-pantalla apagada 5 min (sin huecos). Registrar resultados en
-`.sdd/test-reports/`.
+### Verificación pendiente en móvil físico
+Con un dispositivo a mano: instala encima de la versión anterior y comprueba que
+los datos guardados siguen ahí; concede ubicación; verifica que la flecha apunta
+al rumbo real al girar el móvil; camina 100 m recto con ancho 6 m y comprueba el
+pintado y las hectáreas; cambia el ancho a mitad de recorrido (no debe borrarse
+lo pintado); deja la pantalla apagada 5 min (debe seguir registrando); revisa
+consumo de batería. Registrar resultados en `.sdd/test-reports/`.

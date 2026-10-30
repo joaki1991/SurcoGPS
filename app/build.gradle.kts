@@ -14,8 +14,8 @@ android {
         applicationId = "es.surcogps.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 15
-        versionName = "1.9.0"
+        versionCode = 16
+        versionName = "2.0.0"
     }
 
     // Firma release con clave LOCAL (local.properties, nunca commiteada).
@@ -70,9 +70,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.navigation:navigation-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.5")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
     implementation("com.google.android.gms:play-services-location:21.3.0")

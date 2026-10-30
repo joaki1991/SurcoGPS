@@ -226,3 +226,14 @@
 - Suites forzadas core 79/79 + app 88/88 (13 casos nuevos). Debug 12.171.677 B; release v1.9.0 (versionCode 15) 8.647.012 B, firmada CN=SurcoGPS-Dev, SHA-256 45544656...B20C93.
 - Pendiente en movil real: contraste visual de la franja sobre satelite, pasos de 0,1 en pantalla y prueba de campo con GPS real. El emulador entra en ANR de System UI y no sirve para validar la pintura en pantalla.
 
+## 2026-10-30 - SPRINT-49 PASS - v2.0.0 (pantalla unica de campo)
+- Objetivo: app mucho mas simple pero funcional en campo. Una sola pantalla edge-to-edge; mapa a pantalla completa (tambien en horizontal) con panel flotante ocultable.
+- Punto azul + flecha de rumbo (brujula con declinacion y remapeo por rotacion; respaldo GPS solo con velocidad >= 0,8 m/s) + circulo de precision.
+- Pintado del recorrido con el ancho real del apero en pasos de 0,1 m (0,5-30 m); cambiar el ancho NO borra lo pintado (ancho por tramo en CoberturaEngine).
+- Lineas guia acotadas: solo visibles, radio 10 km, max 200; si el zoom no las separa (6 px) solo se dibuja la activa. Grosores y ancla escalados por densidad.
+- "Nuevo recorrido" limpia solo la cobertura en memoria; sesiones/parcelas guardadas intactas. Eliminadas pantallas de Ajustes/Parcela/Sesion/Diagnostico, AvisoCierre, ArranqueReceiver y FileProvider.
+- Fallos reales encontrados en emulador y corregidos: (1) NPE al arrancar por orden de inicializacion en MotorCampo; (2) OSMDroid borraba las capas al separar la vista de la ventana en la rotacion (capas=0, zoom raro) -> setDestroyMode(false) + garantizarCapas(); (3) seguir no recentraba al rotar sin mover el fix.
+- Suites forzadas core 79/79 + app 103/103 (15 casos nuevos). Debug 11.994.865 B; release v2.0.0 (versionCode 16) 8.496.741 B, firmada CN=SurcoGPS-Dev, SHA-256 APK 073B725E...0051F5.
+- Verificado en emulador Android 14 (540x1170, densidad 240): arranque en frio, GPS inyectado, punto/flecha/lineas/franja, ancho 6,0->6,2 m sin borrar superficie, pausa/reanudar, dialogo de nuevo recorrido, ocultar/mostrar panel, satelite<->calles y rotacion vertical-horizontal-vertical con capas intactas.
+- Pendiente en movil real: brujula fisica (el emulador no tiene sensores reales), GPS de campo, consumo con pantalla apagada y pintura con apero real.
+

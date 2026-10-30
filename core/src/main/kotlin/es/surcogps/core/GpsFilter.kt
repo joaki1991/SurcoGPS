@@ -11,6 +11,8 @@ data class Fix(
     val accuracyM: Float,
     /** Velocidad informada por el receptor (m/s), si existe. */
     val speedMps: Float? = null,
+    /** Rumbo de desplazamiento informado por el receptor (grados), si existe. */
+    val bearingDeg: Float? = null,
     /** Marca temporal (ms desde epoch). */
     val timeMs: Long
 )

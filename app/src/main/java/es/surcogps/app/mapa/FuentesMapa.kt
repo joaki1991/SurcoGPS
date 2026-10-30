@@ -13,7 +13,7 @@ import org.osmdroid.util.MapTileIndex
  *   (límites y topónimos) encima → satélite con referencias cartográficas.
  *
  * Esri exige el orden `tile/{z}/{y}/{x}` (invertido respecto a OSM), de ahí el
- * `getTileURLString` a medida. Atribución visible obligatoria (ver MapaCampo).
+ * `getTileURLString` a medida. Atribución visible obligatoria (ver MapaSimple).
  */
 object FuentesMapa {
 
@@ -30,6 +30,8 @@ object FuentesMapa {
                 val y = MapTileIndex.getY(pMapTileIndex)
                 return "$ESRI_IMAGERY/$z/$y/$x"
             }
+
+            override fun getCopyrightNotice(): String = "© Esri World Imagery"
         }
 
     fun esriReference(): OnlineTileSourceBase =

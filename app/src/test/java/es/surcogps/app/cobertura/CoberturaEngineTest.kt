@@ -64,6 +64,18 @@ class CoberturaEngineTest {
     }
 
     @Test
+    fun cambiarAnchoNoBorraYUsaElVigente() {
+        val e = CoberturaEngine(ancla, 6.0)
+        e.registrar(punto(0.0, 0.0))
+        e.registrar(punto(0.0, 10.0), 6.0)
+        val area6 = e.areaM2
+        e.registrar(punto(0.0, 20.0), 12.0)
+        assertTrue(e.areaM2 > area6)
+        assertEquals(12.0, e.tramos.last().anchoM, 1e-9)
+        assertEquals(2, e.tramos.size) // 3 puntos → 2 tramos.
+    }
+
+    @Test
     fun reiniciarLimpia() {
         val e = CoberturaEngine(ancla, 6.0)
         e.registrar(punto(0.0, 0.0))

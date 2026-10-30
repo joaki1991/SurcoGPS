@@ -38,11 +38,15 @@ class CoberturaEngine(
     }
 
     /**
-     * Registra una posición del apero. Devuelve las celdas NUEVAS aportadas
-     * (0 si pausado, si es el primer punto, si apenas se ha movido (< 10 cm,
-     * bajo el suelo de ruido GPS) o si ya estaba cubierto).
+     * Registra una posición del apero con el ancho vigente [anchoActualM].
+     * Devuelve las celdas NUEVAS aportadas (0 si pausado, si es el primer
+     * punto, si apenas se ha movido (< 10 cm, bajo el suelo de ruido GPS) o si
+     * ya estaba cubierto).
+     *
+     * El ancho se recibe por tramo para que cambiarlo en marcha NO reinicie la
+     * cuadrícula ni borre lo ya trabajado.
      */
-    fun registrar(p: LatLon): Int {
+    fun registrar(p: LatLon, anchoActualM: Double = anchoM): Int {
         if (pausado) return 0
         val prev = ultimo
         if (prev == null) {
@@ -51,9 +55,9 @@ class CoberturaEngine(
         }
         if (GeoMath.haversine(prev, p) < MIN_TRAMO_M) return 0
         ultimo = p
-        val nuevas = tracker.addSection(prev, p, anchoM)
+        val nuevas = tracker.addSection(prev, p, anchoActualM)
         if (_tramos.size < MAX_TRAMOS_DIBUJO) {
-            _tramos.add(TramoFranja(prev, p, anchoM))
+            _tramos.add(TramoFranja(prev, p, anchoActualM))
         }
         return nuevas
     }

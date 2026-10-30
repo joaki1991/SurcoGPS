@@ -79,6 +79,16 @@ class GuiadoPipelineTest {
     }
 
     @Test
+    fun conservaElRumboDelReceptorEnElFix() {
+        val p = GuiadoPipeline()
+        val e = p.procesar(
+            fixEn(0.0, 0.0).copy(bearingDeg = 123f), t0, guia, sinOffset
+        )
+        assertTrue(e.aceptado)
+        assertEquals(123f, e.fix!!.bearingDeg)
+    }
+
+    @Test
     fun reiniciarLimpiaEstado() {
         val p = GuiadoPipeline()
         p.procesar(fixEn(0.0, 0.0), t0, guia, sinOffset)

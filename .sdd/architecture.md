@@ -1,5 +1,15 @@
 # Arquitectura — SurcoGPS
 
+> **v2.0.0 (sprint 49):** la app queda reducida a **una sola pantalla** de campo.
+> El `:core` se conserva intacto (geometría, cobertura, filtro, sesiones) y sigue
+> siendo la fuente de verdad métrica. En `:app` desaparecen navegación, pantallas
+> de parcelas/sesiones/ajustes/diagnóstico, el receptor de arranque y el
+> `FileProvider`; el `MapView` se retiene en el ViewModel y las capas se restauran
+> si el sistema separa la vista de la ventana. Los datos ya guardados
+> (`files/sesiones`, `files/parcelas`, DataStore `ajustes`) no se leen ni se
+> borran. El diagrama y las decisiones siguientes describen el diseño histórico
+> y siguen siendo válidos para el núcleo y el mapa.
+
 ## Resumen
 App Android nativa (Kotlin + Jetpack Compose, MVVM) + núcleo de dominio puro `:core`
 (Kotlin/JVM sin Android) para que toda la geometría y cobertura sea unit-testeable sin SDK.

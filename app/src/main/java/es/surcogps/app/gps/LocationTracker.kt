@@ -228,6 +228,7 @@ class LocationTracker(private val context: Context) {
             position = LatLon(l.latitude, l.longitude),
             accuracyM = if (l.hasAccuracy()) l.accuracy else Float.NaN,
             speedMps = if (l.hasSpeed()) l.speed else null,
+            bearingDeg = if (l.hasBearing()) l.bearing else null,
             timeMs = l.time
         )
         _fuente.value = origen
